@@ -1,38 +1,37 @@
-const express = require("express");
-const { getWeather } = require("./services/weatherService");
+// backend/server.js
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+
+const weatherRoutes = require('./routes/weatherRoutes');
+const recommendationRoutes = require('./routes/recommendationRoutes');
+const alertRoutes = require('./routes/alertRoutes');
+const assistantRoutes = require('./routes/assistantRoutes');
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5001;
 
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-// Check if the backend is running
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    message: "MAUSAM AI backend is running",
-  });
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', service: 'MAUSAM AI Backend' });
 });
 
-// Get weather data
-app.get("/api/weather", async (req, res) => {
-  try {
-    const city = req.query.city || "Bareilly";
+// Routes
+app.use('/api/weather', weatherRoutes);
+app.use('/api/recommend', recommendationRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/assistant', assistantRoutes);
 
-    const weather = await getWeather(city);
-
-    res.json(weather);
-  } catch (error) {
-    console.error("Weather API error:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Unable to fetch weather data",
-    });
-  }
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong on the server.' });
 });
 
-// Start the server
 app.listen(PORT, () => {
-  console.log(`MAUSAM AI backend running on port ${PORT}`);
+  console.log(`✅ MAUSAM AI Backend running on http://localhost:${PORT}`);
 });
