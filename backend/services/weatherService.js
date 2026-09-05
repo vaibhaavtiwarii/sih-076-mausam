@@ -48,17 +48,29 @@ async function getWeather(city) {
 
   const weatherData = await weatherResponse.json();
 
-  // Keep only the next 24 hours
-  const hourlyForecast = weatherData.hourly.time
-    .slice(0, 24)
-    .map((time, index) => ({
+  const currentHour = new Date();
+currentHour.setMinutes(0, 0, 0);
+
+const currentHourIndex = weatherData.hourly.time.findIndex((time) => {
+  return new Date(time).getTime() === currentHour.getTime();
+});
+
+const safeCurrentHourIndex = currentHourIndex >= 0 ? currentHourIndex : 0;
+
+const hourlyForecast = weatherData.hourly.time
+  .slice(safeCurrentHourIndex, safeCurrentHourIndex + 24)
+  .map((time, index) => {
+    const dataIndex = safeCurrentHourIndex + index;
+
+    return {
       time,
-      temperature: weatherData.hourly.temperature_2m[index],
-      rain: weatherData.hourly.precipitation_probability[index],
-      humidity: weatherData.hourly.relative_humidity_2m[index],
-      wind: weatherData.hourly.wind_speed_10m[index],
-      weatherCode: weatherData.hourly.weather_code[index],
-    }));
+      temperature: weatherData.hourly.temperature_2m[dataIndex],
+      rain: weatherData.hourly.precipitation_probability[dataIndex],
+      humidity: weatherData.hourly.relative_humidity_2m[dataIndex],
+      wind: weatherData.hourly.wind_speed_10m[dataIndex],
+      weatherCode: weatherData.hourly.weather_code[dataIndex],
+    };
+  });
 
   return {
     location: `${location.name}, ${location.admin1 || location.country}`,
@@ -72,7 +84,7 @@ async function getWeather(city) {
     wind: weatherData.current.wind_speed_10m,
 
     uv: weatherData.daily.uv_index_max[0],
-    rain: weatherData.hourly.precipitation_probability[0],
+    rain: weatherData.hourly.precipitation_probability[safeCurrentHourIndex],
 
     weatherCode: weatherData.current.weather_code,
     hourly: hourlyForecast,
