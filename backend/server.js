@@ -1,4 +1,5 @@
 const express = require("express");
+const { getWeather } = require("./services/weatherService");
 
 const app = express();
 const PORT = 5000;
@@ -14,17 +15,21 @@ app.get("/api/health", (req, res) => {
 });
 
 // Get weather data
-app.get("/api/weather", (req, res) => {
-  res.json({
-    location: "Bengaluru, Karnataka",
-    temperature: 28,
-    condition: "Partly Cloudy",
-    feelsLike: 30,
-    humidity: 80,
-    wind: 8,
-    uvIndex: 7,
-    rainProbability: 15,
-  });
+app.get("/api/weather", async (req, res) => {
+  try {
+    const city = req.query.city || "Bareilly";
+
+    const weather = await getWeather(city);
+
+    res.json(weather);
+  } catch (error) {
+    console.error("Weather API error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to fetch weather data",
+    });
+  }
 });
 
 // Start the server
