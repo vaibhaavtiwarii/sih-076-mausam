@@ -1,4 +1,7 @@
+app.set('trust proxy', 1);
+
 // backend/server.js
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -16,6 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 // Health check
+app.get('/', (req, res) => res.send('Backend API is running!'));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'MAUSAM AI Backend' });
 });
