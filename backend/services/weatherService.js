@@ -55,6 +55,12 @@ async function fetchWeather(latitude, longitude) {
   const current = data.current_weather;
   const hourly = data.hourly;
 
+  // current_weather has no humidity or uv_index field — find the hourly
+  // index matching the current timestamp and read those values from there.
+  let currentHourIndex = hourly.time.findIndex(t => t === current.time);
+  if (currentHourIndex === -1) currentHourIndex = 0;
+  const currentHumidity = hourly.relativehumidity_2m[currentHourIndex] ?? 0;
+
   // Build hourly forecast array (next 24 hours)
   const hourlyForecast = [];
   const now = new Date();
@@ -83,9 +89,9 @@ async function fetchWeather(latitude, longitude) {
     temperature: Math.round(current.temperature),
     condition: mapWeatherCode(current.weathercode),
     feelsLike: Math.round(current.apparent_temperature || current.temperature),
-    humidity: current.relativehumidity || 0, // might be undefined in current_weather, fallback
+    humidity: currentHumidity,
     wind: Math.round(current.windspeed),
-    uv: Math.round(current.uv_index || 0),
+    uv: Math.round((hourly.uv_index[currentHourIndex] || 0) * 10) / 10,
     rain: 0, // current rain probability isn't directly provided, we can use the first hourly value
     hourly: hourlyForecast
   };

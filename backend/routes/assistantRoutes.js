@@ -5,7 +5,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
+    model: "gemini-2.5-flash",
     // Define the tools (function calling) so Gemini knows how to get weather
     tools: [{
         functionDeclarations: [{
@@ -35,12 +35,19 @@ async function getWeatherData(city) {
     const { latitude, longitude, name } = geoData.results[0];
     
     // Fetch actual weather from Open-Meteo
-    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,weathercode&timezone=auto`);
+    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,weathercode&timezone=auto`);
     const weatherData = await weatherRes.json();
+
+    // current_weather has no humidity field - look up the hourly value
+    // for the timestamp that matches current_weather.time instead.
+    const hourly = weatherData.hourly;
+    let currentHourIndex = hourly.time.findIndex(t => t === weatherData.current_weather.time);
+    if (currentHourIndex === -1) currentHourIndex = 0;
 
     return {
         city: name,
         temperature: weatherData.current_weather.temperature,
+        humidity: hourly.relativehumidity_2m[currentHourIndex],
         wind_speed: weatherData.current_weather.windspeed,
         condition: weatherData.current_weather.weathercode,
         hourly: weatherData.hourly
@@ -55,7 +62,7 @@ router.post('/', async (req, res) => {
         const chat = model.startChat({
             history: [],
             // If Gemini doesn't get tools, it might hallucinate, so we force it to use tools
-            toolConfig: { functionCallingConfig: "AUTO" }
+            toolConfig: { functionCallingConfig: { mode: "AUTO" } }
         });
 
         // Send the user's prompt to Gemini

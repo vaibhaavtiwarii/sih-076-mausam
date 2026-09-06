@@ -9,14 +9,14 @@ function WeatherCard({ weather }) {
 
   return (
     <div className="main-weather-card">
-      <h2 className="city-name">{weather.city}</h2>
+      <h2 className="city-name">{weather.location}</h2>
       
       <div className="temp-display">
         {/* Big weather icon (Sun for day, can change based on condition) */}
         <WiDaySunny size={110} color="#f59e0b" />
         <div>
           <h1 className="temp-text">{weather.temperature}°</h1>
-          <p className="feels-like">Feels like {weather.feels_like}°C</p>
+          <p className="feels-like">Feels like {weather.feelsLike}°C</p>
         </div>
       </div>
 
@@ -36,7 +36,7 @@ function WeatherCard({ weather }) {
         <div className="stat-tile" style={{ background: '#fef3c7' }}>
            <WiDaySunny size={35} color="#d97706" />
            <span>UV Index</span>
-           <strong>{weather.uv_index}</strong>
+           <strong>{weather.uv}</strong>
         </div>
 
         <div className="stat-tile" style={{ background: '#e0f2fe' }}>

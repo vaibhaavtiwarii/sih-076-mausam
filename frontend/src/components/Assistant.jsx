@@ -22,7 +22,7 @@ function Assistant({ city, activity, persona }) { // We accept props, but we won
       });
       setResponse(res.data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to get response.');
+      setError(err.response?.data?.reply || err.response?.data?.error || 'Failed to get response.');
     } finally {
       setLoading(false);
     }
