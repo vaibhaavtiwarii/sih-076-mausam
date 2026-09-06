@@ -1,88 +1,93 @@
 // backend/routes/assistantRoutes.js
 const express = require('express');
-const { getWeatherForCity } = require('../services/weatherService');
-const { getRecommendation } = require('../services/recommendationService');
-
 const router = express.Router();
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Simple deterministic response generator
-function generateAssistantResponse(question, weatherData, activity, persona) {
-  const lower = question.toLowerCase();
-  const recommendation = getRecommendation(weatherData, activity || 'Running', persona || 'Fitness');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    // Define the tools (function calling) so Gemini knows how to get weather
+    tools: [{
+        functionDeclarations: [{
+            name: "get_weather",
+            description: "Get the current weather, humidity, and hourly forecast for a specific city.",
+            parameters: {
+                type: "OBJECT",
+                properties: {
+                    city: { type: "STRING", description: "The name of the city, e.g., 'Bareilly'" }
+                },
+                required: ["city"]
+            }
+        }]
+    }]
+});
 
-  // Check for specific time mentions
-  const timeMatch = question.match(/(\d{1,2})\s*(am|pm)/i);
-  let specificHour = null;
-  if (timeMatch) {
-    let hour = parseInt(timeMatch[1]);
-    const meridiem = timeMatch[2].toLowerCase();
-    if (meridiem === 'pm' && hour !== 12) hour += 12;
-    if (meridiem === 'am' && hour === 12) hour = 0;
-    specificHour = hour;
-  }
-
-  if (lower.includes('running') || lower.includes('run')) {
-    if (specificHour !== null) {
-      // Check that specific hour in weather data
-      const targetHour = weatherData.hourly.find(h => new Date(h.time).getHours() === specificHour);
-      if (targetHour) {
-        if (targetHour.rain > 60) {
-          return `I see you want to run at ${timeMatch[0]}. Rain probability is ${targetHour.rain}% at that time. ${recommendation.bestWindow} is a better window with lower rain risk.`;
-        } else if (targetHour.uv > 6) {
-          return `At ${timeMatch[0]}, UV index is ${targetHour.uv}. That's quite high. Consider running during ${recommendation.bestWindow} when UV is lower.`;
-        } else {
-          return `At ${timeMatch[0]}, conditions look decent (temp: ${targetHour.temperature}°C, rain: ${targetHour.rain}%). However, the optimal window is ${recommendation.bestWindow} with a score of ${recommendation.score}/100.`;
-        }
-      }
+// A helper function to call Open-Meteo (FREE and NO LIMITS)
+async function getWeatherData(city) {
+    // Simple geocoding to get lat/lon (using Open-Meteo's free API)
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1`);
+    const geoData = await geoRes.json();
+    
+    if (!geoData.results || geoData.results.length === 0) {
+        return { error: `City '${city}' not found.` };
     }
-    return `Based on today's forecast, the best time to run is ${recommendation.bestWindow} (score: ${recommendation.score}/100). ${recommendation.reasons.join(' ')}`;
-  }
 
-  if (lower.includes('event') || lower.includes('outdoor')) {
-    if (weatherData.rain > 50) {
-      return `Your outdoor event may be affected. Rain probability is ${weatherData.rain}%. I'll alert you if plans need to change. The best window today is ${recommendation.bestWindow}.`;
-    }
-    return `Weather looks favorable for your event. Temperature: ${weatherData.temperature}°C, rain: ${weatherData.rain}%. Enjoy!`;
-  }
+    const { latitude, longitude, name } = geoData.results[0];
+    
+    // Fetch actual weather from Open-Meteo
+    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,weathercode&timezone=auto`);
+    const weatherData = await weatherRes.json();
 
-  if (lower.includes('commute') || lower.includes('travel')) {
-    if (weatherData.rain > 60) {
-      return `Heavy rain (${weatherData.rain}%) may affect your commute. Allow extra travel time and carry an umbrella.`;
-    }
-    return `Your commute looks clear. No significant weather disruptions expected.`;
-  }
-
-  if (lower.includes('prepare') || lower.includes('tomorrow')) {
-    const tomorrow = weatherData.hourly.slice(12, 24);
-    const avgRain = tomorrow.reduce((sum, h) => sum + h.rain, 0) / tomorrow.length;
-    if (avgRain > 50) {
-      return `For tomorrow, carry an umbrella. Rain is likely throughout the day (avg ${Math.round(avgRain)}% probability).`;
-    }
-    return `Tomorrow looks pleasant. Temperatures around ${Math.round(tomorrow.reduce((s,h) => s + h.temperature, 0)/tomorrow.length)}°C. No major rain expected.`;
-  }
-
-  // Default fallback using recommendation
-  return `I'm here to help with your weather decisions. ${recommendation.bestWindow} is a great window for ${activity} (score: ${recommendation.score}/100). ${recommendation.reasons.join(' ')} Ask me about running, events, or commuting!`;
+    return {
+        city: name,
+        temperature: weatherData.current_weather.temperature,
+        wind_speed: weatherData.current_weather.windspeed,
+        condition: weatherData.current_weather.weathercode,
+        hourly: weatherData.hourly
+    };
 }
 
 router.post('/', async (req, res) => {
-  try {
-    const { question, city, activity, persona } = req.body;
-    if (!question) return res.status(400).json({ error: 'Question is required' });
+    try {
+        const { prompt } = req.body;
+        
+        // Start the chat session
+        const chat = model.startChat({
+            history: [],
+            // If Gemini doesn't get tools, it might hallucinate, so we force it to use tools
+            toolConfig: { functionCallingConfig: "AUTO" }
+        });
 
-    const location = city || 'Bareilly';
-    const weatherData = await getWeatherForCity(location);
-    const response = generateAssistantResponse(question, weatherData, activity, persona);
+        // Send the user's prompt to Gemini
+        let result = await chat.sendMessage(prompt);
+        let response = result.response;
 
-    res.json({
-      question: question,
-      response: response,
-      mode: 'Demo Reasoning Mode (deterministic)',
-      location: weatherData.location
-    });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+        // Loop in case Gemini wants to call the function
+        for (let i = 0; i < 5; i++) {
+            const functionCalls = response.functionCalls();
+            if (functionCalls && functionCalls.length > 0) {
+                // Gemini wants to call get_weather
+                const weatherData = await getWeatherData(functionCalls[0].args.city);
+                
+                // Send the data BACK to Gemini
+                result = await chat.sendMessage([{
+                    functionResponse: {
+                        name: "get_weather",
+                        response: weatherData
+                    }
+                }]);
+                response = result.response;
+            } else {
+                break; // Gemini is done and has a text response
+            }
+        }
+
+        res.json({ reply: response.text() });
+
+    } catch (error) {
+        console.error("Gemini Error:", error);
+        res.status(500).json({ reply: "Sorry, I had trouble connecting to the AI right now." });
+    }
 });
 
 module.exports = router;

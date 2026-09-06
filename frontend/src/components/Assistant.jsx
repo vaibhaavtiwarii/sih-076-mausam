@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { weatherApi } from '../api';
 import './Assistant.css';
 
-function Assistant({ city, activity, persona }) {
+function Assistant({ city, activity, persona }) { // We accept props, but we won't send them to the AI
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -16,11 +16,9 @@ function Assistant({ city, activity, persona }) {
     setLoading(true);
     setError(null);
     try {
+      // New way: Send ONLY the prompt to Gemini
       const res = await weatherApi.askAssistant({
-        question: question.trim(),
-        city: city,
-        activity: activity,
-        persona: persona
+        prompt: question.trim()
       });
       setResponse(res.data);
     } catch (err) {
@@ -40,7 +38,8 @@ function Assistant({ city, activity, persona }) {
     <div className="assistant">
       <div className="assistant-header">
         <h3>🤖 Ask MAUSAM AI</h3>
-        <span className="assistant-mode">Demo Reasoning Mode</span>
+        {/* Changed from "Demo Reasoning Mode" */}
+        <span className="assistant-mode">Powered by Gemini AI</span> 
       </div>
 
       <div className="quick-prompts">
@@ -79,11 +78,13 @@ function Assistant({ city, activity, persona }) {
 
       {response && (
         <div className="assistant-response">
-          <div className="response-question">Q: {response.question}</div>
-          <div className="response-answer">A: {response.response}</div>
+          <div className="response-question">Q: {question}</div>
+          {/* Changed from response.response to response.reply */}
+          <div className="response-answer">A: {response.reply}</div>
           <div className="response-meta">
-            <span>{response.mode}</span>
-            <span>📍 {response.location}</span>
+            {/* Changed response.mode and response.location */}
+            <span>AI Smart Assistant</span>
+            <span>📍 Auto-detected by Gemini</span>
           </div>
         </div>
       )}
