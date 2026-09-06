@@ -19,6 +19,30 @@ const extractorModel = genAI.getGenerativeModel({
 // models reject with a 400 "Role 'function' is not supported" error).
 const answerModel = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
 
+// Small delay helper
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Google's shared/free-tier models occasionally return 503 "high demand" errors.
+// These are transient - retrying a couple of times with a short delay usually
+// succeeds. This wraps any generateContent call with that retry behaviour.
+async function generateWithRetry(model, prompt, retries = 2) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            return await model.generateContent(prompt);
+        } catch (error) {
+            const is503 = error?.status === 503 || /503|overloaded|high demand/i.test(error?.message || '');
+            const isLastAttempt = attempt === retries;
+            if (!is503 || isLastAttempt) {
+                throw error; // not a transient error, or we've run out of retries - bubble up
+            }
+            // Wait a bit before retrying (0.8s, then 1.6s, etc.)
+            await sleep(800 * (attempt + 1));
+        }
+    }
+}
+
 // A helper function to call Open-Meteo (FREE and NO LIMITS)
 async function getWeatherData(city) {
     // Simple geocoding to get lat/lon (using Open-Meteo's free API)
@@ -62,7 +86,8 @@ router.post('/', async (req, res) => {
         const { prompt } = req.body;
 
         // Step 1: Ask Gemini to pull out a city name from the user's message, if any.
-        const extractResult = await extractorModel.generateContent(
+        const extractResult = await generateWithRetry(
+            extractorModel,
             `Extract the city name the user is asking about, if any is mentioned or clearly implied. ` +
             `Respond ONLY with JSON in this exact shape: {"city": "CityName"} or {"city": null} if no city is mentioned. ` +
             `User message: "${prompt}"`
@@ -89,12 +114,16 @@ router.post('/', async (req, res) => {
 
         // Step 2: Get the actual answer as a single plain-text request.
         // No chat history, no function calling - just one request, one response.
-        const result = await answerModel.generateContent(finalPrompt);
+        const result = await generateWithRetry(answerModel, finalPrompt);
         res.json({ reply: result.response.text() });
 
     } catch (error) {
         console.error("Gemini Error:", error);
-        res.status(500).json({ reply: "Sorry, I had trouble connecting to the AI right now." });
+        const is503 = error?.status === 503 || /503|overloaded|high demand/i.test(error?.message || '');
+        const message = is503
+            ? "The AI is under heavy load right now. Please wait a few seconds and try again."
+            : "Sorry, I had trouble connecting to the AI right now.";
+        res.status(500).json({ reply: message });
     }
 });
 
