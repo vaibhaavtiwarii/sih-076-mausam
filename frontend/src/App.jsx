@@ -6,11 +6,14 @@ import RecommendationCard from './components/RecommendationCard';
 import AlertList from './components/AlertList';
 import Assistant from './components/Assistant';
 import ActivitySelector from './components/ActivitySelector';
+import CitySelect from './components/CitySelect';
 import './App.css';
 
 function App() {
-  const [city, setCity] = useState('Bareilly');
-  const [inputCity, setInputCity] = useState('Bareilly');
+  // 'landing' = the city-select screen, 'dashboard' = the main weather app
+  const [stage, setStage] = useState('landing');
+  const [city, setCity] = useState('');
+  const [inputCity, setInputCity] = useState('');
   const [activity, setActivity] = useState('Running');
   const [persona, setPersona] = useState('Fitness');
   const [weather, setWeather] = useState(null);
@@ -43,10 +46,27 @@ function App() {
     }
   };
 
-  // Fetch on mount and when city/activity/persona changes
+  // Fetch whenever we're on the dashboard and city/activity/persona changes
   useEffect(() => {
-    fetchAllData(city, activity, persona);
-  }, [city, activity, persona]);
+    if (stage === 'dashboard' && city) {
+      fetchAllData(city, activity, persona);
+    }
+  }, [stage, city, activity, persona]);
+
+  // Called from the landing screen once a city has been chosen
+  const handleLocationConfirmed = (selectedCity) => {
+    setCity(selectedCity);
+    setInputCity(selectedCity);
+    setStage('dashboard');
+  };
+
+  // Lets the user go back and pick a different city
+  const handleChangeLocation = () => {
+    setWeather(null);
+    setRecommendation(null);
+    setAlerts([]);
+    setStage('landing');
+  };
 
   const handleCitySubmit = (e) => {
     e.preventDefault();
@@ -64,6 +84,12 @@ function App() {
     setPersona(newPersona);
   };
 
+  // Screen 1: ask the user for their location before showing anything else
+  if (stage === 'landing') {
+    return <CitySelect onContinue={handleLocationConfirmed} />;
+  }
+
+  // Screen 2: the full dashboard
   return (
     <div className="app">
       <header className="app-header">
@@ -86,6 +112,13 @@ function App() {
             {lastUpdated && (
               <span className="last-updated">Updated: {lastUpdated}</span>
             )}
+            <button
+              type="button"
+              className="change-location-btn"
+              onClick={handleChangeLocation}
+            >
+              📍 Change location
+            </button>
           </div>
         </div>
       </header>
@@ -149,7 +182,7 @@ function App() {
 
         {!loading && !weather && !error && (
           <div className="empty-state">
-            <p>Enter a city to get started with MAUSAM AI.</p>
+            <p>Fetching weather for {city}...</p>
           </div>
         )}
       </main>

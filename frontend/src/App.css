@@ -330,3 +330,20 @@ html, body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+.change-location-btn {
+  background: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 40px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.change-location-btn:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: #f0f9ff;
+}
