@@ -28,6 +28,12 @@ router.post('/', async (req, res) => {
       recommendation: recommendation
     });
   } catch (error) {
+    const status = error.response?.status;
+    if (status === 429) {
+      return res.status(429).json({
+        error: 'Weather service is busy right now (rate limited). Please wait a few seconds and try again.'
+      });
+    }
     res.status(400).json({ error: error.message });
   }
 });
