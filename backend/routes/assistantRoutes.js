@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getWeatherForCity } = require('../services/weatherService');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -43,40 +44,22 @@ async function generateWithRetry(model, prompt, retries = 2) {
     }
 }
 
-// A helper function to call Open-Meteo (FREE and NO LIMITS)
-async function getWeatherData(city) {
-    // Simple geocoding to get lat/lon (using Open-Meteo's free API)
-    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
-    const geoData = await geoRes.json();
-
-    if (!geoData.results || geoData.results.length === 0) {
-        return { error: `City '${city}' not found.` };
-    }
-
-    const { latitude, longitude, name } = geoData.results[0];
-
-    // Fetch actual weather from Open-Meteo
-    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,weathercode&timezone=auto`);
-    const weatherData = await weatherRes.json();
-
-    // current_weather has no humidity field - look up the hourly value
-    // for the timestamp that matches current_weather.time instead.
-    const hourly = weatherData.hourly;
-    let currentHourIndex = hourly.time.findIndex(t => t === weatherData.current_weather.time);
-    if (currentHourIndex === -1) currentHourIndex = 0;
-
+// Builds a small weather-context object for Gemini using the SAME cached,
+// rate-limit-safe weatherService the rest of the app uses (previously this
+// route called Open-Meteo directly and independently, which meant the
+// assistant could still trigger 429s even after the dashboard was fixed).
+async function getWeatherContext(city) {
+    const weatherData = await getWeatherForCity(city);
     return {
-        city: name,
-        temperature: weatherData.current_weather.temperature,
-        humidity: hourly.relativehumidity_2m[currentHourIndex],
-        wind_speed: weatherData.current_weather.windspeed,
-        condition: weatherData.current_weather.weathercode,
-        // Trim the hourly payload - we only need the next few hours as context,
-        // not all 24, to keep the prompt small and fast.
-        hourly: hourly.time.slice(0, 12).map((t, i) => ({
-            time: t,
-            temperature: hourly.temperature_2m[i],
-            humidity: hourly.relativehumidity_2m[i]
+        city: weatherData.location,
+        temperature: weatherData.temperature,
+        humidity: weatherData.humidity,
+        wind_speed: weatherData.wind,
+        condition: weatherData.condition,
+        hourly: weatherData.hourly.slice(0, 12).map(h => ({
+            time: h.time,
+            temperature: h.temperature,
+            humidity: h.humidity
         }))
     };
 }
@@ -104,7 +87,7 @@ router.post('/', async (req, res) => {
         let finalPrompt = prompt;
 
         if (city) {
-            const weatherData = await getWeatherData(city);
+            const weatherData = await getWeatherContext(city);
             finalPrompt =
                 `You are MAUSAM AI, a helpful weather assistant. ` +
                 `Here is live weather data for ${city}: ${JSON.stringify(weatherData)}. ` +
@@ -118,11 +101,12 @@ router.post('/', async (req, res) => {
         res.json({ reply: result.response.text() });
 
     } catch (error) {
-        console.error("Gemini Error:", error);
+        console.error("Assistant Error:", error);
         const is503 = error?.status === 503 || /503|overloaded|high demand/i.test(error?.message || '');
-        const message = is503
-            ? "The AI is under heavy load right now. Please wait a few seconds and try again."
-            : "Sorry, I had trouble connecting to the AI right now.";
+        const is429 = error.response?.status === 429;
+        let message = "Sorry, I had trouble connecting to the AI right now.";
+        if (is503) message = "The AI is under heavy load right now. Please wait a few seconds and try again.";
+        if (is429) message = "Weather service is busy right now (rate limited). Please wait a few seconds and try again.";
         res.status(500).json({ reply: message });
     }
 });

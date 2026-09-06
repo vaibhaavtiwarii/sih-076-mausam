@@ -37,7 +37,9 @@ function generateAlerts(weatherData, activity, persona) {
     }
 
     // General severe weather: thunderstorm or high wind
-    if (hour.weatherCode >= 95) {
+    // (checked by condition text rather than a numeric code, so this keeps
+    // working no matter which weather provider is behind getWeatherForCity)
+    if (hour.condition && /thunder/i.test(hour.condition)) {
       alerts.push({
         id: `alert-storm-${i}`,
         title: '⛈️ Severe Weather Warning',

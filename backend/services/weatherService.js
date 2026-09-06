@@ -2,45 +2,49 @@
 const axios = require('axios');
 
 // ---------------------------------------------------------------------------
-// Why this file changed:
-// The frontend loads 3 things in parallel for every page view (weather,
-// recommendation, alerts). Each of those hits this service, and each call
-// used to independently geocode the city AND fetch the forecast from
-// Open-Meteo — so ONE page load fired 6 outbound requests. Open-Meteo's free
-// tier rate-limits by IP, and hosting platforms (Render/Vercel) often share
-// IPs across many apps, so it doesn't take much to get a 429.
+// NOTE ON PROVIDER: This now uses WeatherAPI.com instead of Open-Meteo.
 //
-// Fix: (1) cache results for a short time so repeat lookups of the same city
-// don't hit the API again, (2) "coalesce" simultaneous requests for the same
-// city into a single outbound call instead of 3, and (3) retry automatically
-// (with backoff) if Open-Meteo returns a 429/503, instead of immediately
-// failing the whole page.
+// Why: Open-Meteo's free tier requires no key, but is rate-limited PER IP
+// ADDRESS (not per app) - 600/min, 5,000/hour, 10,000/day. Render's free
+// hosting tier shares outbound IPs across many unrelated apps, so other
+// people's traffic on the same IP was exhausting our quota too, which is
+// what caused the repeated 429 errors. Open-Meteo does not offer a free
+// per-account API key for non-commercial use (their "API key" tier is a
+// paid commercial subscription).
+//
+// WeatherAPI.com's free tier (https://www.weatherapi.com/pricing.aspx) gives
+// 100,000 calls/month tied to YOUR OWN account/key, so it's no longer
+// affected by what anyone else on Render's shared IP is doing. It also
+// returns geocoding + current + hourly forecast in a SINGLE call (Open-Meteo
+// needed two calls: one to geocode, one for weather), which further cuts
+// our request volume in half.
+//
+// We still cache + de-dupe concurrent requests on top of this, both to stay
+// well under the generous free quota and to keep the app fast.
 // ---------------------------------------------------------------------------
 
-const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;   // geocoding rarely changes - cache 6h
-const WEATHER_CACHE_TTL_MS = 10 * 60 * 1000;   // weather changes - cache 10m
+const WEATHERAPI_KEY = process.env.WEATHERAPI_KEY;
+const WEATHER_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
-const geoCache = new Map();        // key -> { data, expiresAt }
 const weatherCache = new Map();    // key -> { data, expiresAt }
-const inFlightGeo = new Map();     // key -> Promise (de-dupe concurrent requests)
-const inFlightWeather = new Map(); // key -> Promise
+const inFlightWeather = new Map(); // key -> Promise (de-dupe concurrent requests)
 
 function cacheKey(str) {
   return str.trim().toLowerCase();
 }
 
-function getFromCache(cache, key) {
-  const entry = cache.get(key);
+function getFromCache(key) {
+  const entry = weatherCache.get(key);
   if (!entry) return null;
   if (Date.now() > entry.expiresAt) {
-    cache.delete(key);
+    weatherCache.delete(key);
     return null;
   }
   return entry.data;
 }
 
-function setCache(cache, key, data, ttlMs) {
-  cache.set(key, { data, expiresAt: Date.now() + ttlMs });
+function setCache(key, data) {
+  weatherCache.set(key, { data, expiresAt: Date.now() + WEATHER_CACHE_TTL_MS });
 }
 
 // GET with automatic retry/backoff on 429 (rate limited) and 503 (overloaded).
@@ -66,128 +70,83 @@ async function getWithRetry(url, retries = 3) {
   }
 }
 
-// Open-Meteo Geocoding API (cached + de-duped)
-async function geocodeCity(city) {
-  const key = cacheKey(city);
-
-  const cached = getFromCache(geoCache, key);
-  if (cached) return cached;
-
-  if (inFlightGeo.has(key)) {
-    return inFlightGeo.get(key);
-  }
-
-  const promise = (async () => {
-    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
-    const response = await getWithRetry(url);
-    if (!response.data.results || response.data.results.length === 0) {
-      throw new Error(`City not found: ${city}`);
-    }
-    const result = response.data.results[0];
-    const location = {
-      name: result.name,
-      country: result.country,
-      admin1: result.admin1, // state/province
-      latitude: result.latitude,
-      longitude: result.longitude
-    };
-    setCache(geoCache, key, location, GEO_CACHE_TTL_MS);
-    return location;
-  })();
-
-  inFlightGeo.set(key, promise);
-  try {
-    return await promise;
-  } finally {
-    inFlightGeo.delete(key);
-  }
-}
-
-// Map WMO weather codes to human-readable conditions
-function mapWeatherCode(code) {
-  const map = {
-    0: 'Clear sky',
-    1: 'Mainly clear',
-    2: 'Partly cloudy',
-    3: 'Overcast',
-    45: 'Foggy',
-    48: 'Depositing rime fog',
-    51: 'Light drizzle',
-    53: 'Moderate drizzle',
-    55: 'Dense drizzle',
-    61: 'Slight rain',
-    63: 'Moderate rain',
-    65: 'Heavy rain',
-    71: 'Slight snow fall',
-    73: 'Moderate snow fall',
-    75: 'Heavy snow fall',
-    80: 'Slight rain showers',
-    81: 'Moderate rain showers',
-    82: 'Violent rain showers',
-    95: 'Thunderstorm',
-    96: 'Thunderstorm with slight hail',
-    99: 'Thunderstorm with heavy hail'
+// Map a WeatherAPI hourly entry into our app's internal shape
+function mapHour(h) {
+  return {
+    time: h.time.replace(' ', 'T'),
+    temperature: Math.round(h.temp_c),
+    apparentTemperature: Math.round(h.feelslike_c),
+    humidity: h.humidity,
+    rain: h.chance_of_rain,
+    wind: Math.round(h.wind_kph),
+    uv: Math.round((h.uv || 0) * 10) / 10,
+    weatherCode: h.condition?.code,
+    condition: h.condition?.text || 'Unknown'
   };
-  return map[code] || 'Unknown';
 }
 
-// Fetch current weather and 24-hour forecast from Open-Meteo
-async function fetchWeather(latitude, longitude) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,apparent_temperature,precipitation_probability,weathercode,windspeed_10m,uv_index&timezone=auto&forecast_days=1`;
+// Fetch geocode + current + hourly forecast for a city in ONE call, then
+// build the same clean shape the rest of the app already expects.
+async function fetchFromWeatherApi(city) {
+  if (!WEATHERAPI_KEY) {
+    throw new Error(
+      'WEATHERAPI_KEY is not set. Add it to your backend .env file (and to your Render environment variables).'
+    );
+  }
+
+  const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHERAPI_KEY}&q=${encodeURIComponent(city)}&days=2&aqi=no&alerts=no`;
   const response = await getWithRetry(url);
   const data = response.data;
 
-  const current = data.current_weather;
-  const hourly = data.hourly;
-
-  // current_weather has no humidity or uv_index field — find the hourly
-  // index matching the current timestamp and read those values from there.
-  let currentHourIndex = hourly.time.findIndex(t => t === current.time);
-  if (currentHourIndex === -1) currentHourIndex = 0;
-  const currentHumidity = hourly.relativehumidity_2m[currentHourIndex] ?? 0;
-
-  // Build hourly forecast array (next 24 hours)
-  const hourlyForecast = [];
-
-  for (let i = 0; i < 24; i++) {
-    const time = new Date(hourly.time[i]);
-    hourlyForecast.push({
-      time: time.toISOString(),
-      temperature: Math.round(hourly.temperature_2m[i]),
-      apparentTemperature: Math.round(hourly.apparent_temperature[i]),
-      humidity: hourly.relativehumidity_2m[i],
-      rain: hourly.precipitation_probability[i],
-      wind: Math.round(hourly.windspeed_10m[i]),
-      uv: Math.round(hourly.uv_index[i] * 10) / 10,
-      weatherCode: hourly.weathercode[i],
-      condition: mapWeatherCode(hourly.weathercode[i])
-    });
+  if (!data.location) {
+    throw new Error(`City not found: ${city}`);
   }
 
-  // Build the clean MAUSAM format
-  return {
-    location: null, // will be filled by the caller
-    latitude: latitude,
-    longitude: longitude,
-    temperature: Math.round(current.temperature),
-    condition: mapWeatherCode(current.weathercode),
-    feelsLike: Math.round(current.apparent_temperature || current.temperature),
-    humidity: currentHumidity,
-    wind: Math.round(current.windspeed),
-    uv: Math.round((hourly.uv_index[currentHourIndex] || 0) * 10) / 10,
-    rain: 0, // current rain probability isn't directly provided, we can use the first hourly value
-    hourly: hourlyForecast
+  // Combine today + tomorrow's hourly arrays, then slice the next 24 hours
+  // starting from the current hour, so the forecast is always "from now",
+  // not just "today from midnight".
+  const days = data.forecast?.forecastday || [];
+  const allHours = days.flatMap(d => d.hour || []);
+
+  const currentTime = data.current.time; // e.g. "2026-09-06 18:45"
+  const currentHourStr = `${currentTime.slice(0, 13)}:00`; // "2026-09-06 18:00"
+  let startIndex = allHours.findIndex(h => h.time === currentHourStr);
+  if (startIndex === -1) startIndex = 0;
+
+  const next24 = allHours.slice(startIndex, startIndex + 24).map(mapHour);
+
+  let locationString = data.location.name;
+  if (data.location.region && data.location.region !== data.location.name) {
+    locationString += `, ${data.location.region}`;
+  }
+  if (data.location.country) locationString += `, ${data.location.country}`;
+
+  const weatherData = {
+    location: locationString,
+    latitude: data.location.lat,
+    longitude: data.location.lon,
+    temperature: Math.round(data.current.temp_c),
+    condition: data.current.condition?.text || 'Unknown',
+    feelsLike: Math.round(data.current.feelslike_c),
+    humidity: data.current.humidity,
+    wind: Math.round(data.current.wind_kph),
+    uv: Math.round((data.current.uv || 0) * 10) / 10,
+    rain: next24.length > 0 ? next24[0].rain : 0,
+    hourly: next24
   };
+
+  return weatherData;
 }
 
 // Main function to get weather for a city (cached + de-duped).
 // This is the function every route calls, so caching it here means
 // weather/recommend/alerts (which all call this) automatically share
-// one cached/coalesced result instead of hitting Open-Meteo 3x per page load.
+// one cached/coalesced result instead of hitting the API multiple times
+// per page load.
 async function getWeatherForCity(city) {
   const key = cacheKey(city);
 
-  const cached = getFromCache(weatherCache, key);
+  const cached = getFromCache(key);
   if (cached) return cached;
 
   if (inFlightWeather.has(key)) {
@@ -195,18 +154,8 @@ async function getWeatherForCity(city) {
   }
 
   const promise = (async () => {
-    const location = await geocodeCity(city);
-    const weatherData = await fetchWeather(location.latitude, location.longitude);
-    // Attach location string
-    let locationString = location.name;
-    if (location.admin1) locationString += `, ${location.admin1}`;
-    if (location.country) locationString += `, ${location.country}`;
-    weatherData.location = locationString;
-    // Add rain probability from first hourly entry
-    if (weatherData.hourly && weatherData.hourly.length > 0) {
-      weatherData.rain = weatherData.hourly[0].rain || 0;
-    }
-    setCache(weatherCache, key, weatherData, WEATHER_CACHE_TTL_MS);
+    const weatherData = await fetchFromWeatherApi(city);
+    setCache(key, weatherData);
     return weatherData;
   })();
 
@@ -219,7 +168,5 @@ async function getWeatherForCity(city) {
 }
 
 module.exports = {
-  getWeatherForCity,
-  geocodeCity,
-  fetchWeather
+  getWeatherForCity
 };
