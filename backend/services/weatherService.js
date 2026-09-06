@@ -108,7 +108,7 @@ async function fetchFromWeatherApi(city) {
   const days = data.forecast?.forecastday || [];
   const allHours = days.flatMap(d => d.hour || []);
 
-  const currentTime = data.current.time; // e.g. "2026-09-06 18:45"
+  const currentTime = data.current.last_updated; // e.g. "2026-09-06 18:45"
   const currentHourStr = `${currentTime.slice(0, 13)}:00`; // "2026-09-06 18:00"
   let startIndex = allHours.findIndex(h => h.time === currentHourStr);
   if (startIndex === -1) startIndex = 0;
