@@ -36,7 +36,16 @@ function PersonaPanel({ persona, insights, city }) {
     setSavedDestinations(loadSavedDestinations());
   }, []);
 
-  if (!insights) return null;
+  // Guard against a real race: switching persona re-renders immediately with
+  // the new `persona` prop, but `insights` (fetched async in App.jsx) can
+  // still be the PREVIOUS persona's data for one render. Since each branch
+  // below reads fields specific to its own persona's shape, rendering with
+  // mismatched persona/insights throws (e.g. insights.pollen.level when
+  // insights is actually the Fitness shape) and crashes the whole tree with
+  // no error boundary to catch it - hence the blank screen. Every insights
+  // object already carries its own `persona` field, so just wait for it to
+  // match before rendering anything persona-specific.
+  if (!insights || insights.persona !== persona) return null;
 
   const handleSaveDestination = () => {
     if (!city) return;
