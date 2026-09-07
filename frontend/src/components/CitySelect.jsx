@@ -4,7 +4,7 @@ import { WiDaySunny } from 'react-icons/wi';
 import { FiMapPin } from 'react-icons/fi';
 import './CitySelect.css';
 
-const QUICK_CITIES = ['Delhi', 'Mumbai', 'Bareilly', 'Bengaluru', 'Kolkata', 'Chennai'];
+const QUICK_CITIES = ['New Delhi', 'Mumbai', 'Bareilly', 'Bengaluru', 'Kolkata', 'Chennai'];
 
 function CitySelect({ onContinue }) {
   const [cityInput, setCityInput] = useState('');
