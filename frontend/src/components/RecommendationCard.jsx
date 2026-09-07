@@ -5,7 +5,7 @@ import './RecommendationCard.css';
 function RecommendationCard({ recommendation }) {
   if (!recommendation) return null;
 
-  const { activity, persona, score, bestWindow, reasons, warnings } = recommendation;
+  const { persona, score, bestWindow, reasons, warnings } = recommendation;
 
   const getScoreColor = (s) => {
     if (s >= 80) return '#2dd4bf';
@@ -17,8 +17,7 @@ function RecommendationCard({ recommendation }) {
     <div className="rec-card">
       <div className="rec-header">
         <div className="rec-activity">
-          <span className="rec-icon">🏃</span>
-          <span>{activity}</span>
+          <span className="rec-icon">🎯</span>
           <span className="rec-persona-badge">{persona}</span>
         </div>
         <div className="rec-score">

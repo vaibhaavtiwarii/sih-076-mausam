@@ -11,10 +11,12 @@ const api = axios.create({
 });
 
 export const weatherApi = {
-  getWeather: (city) => api.get(`/api/weather?city=${city}`),
-  getRecommendation: (data) => api.post('/api/recommend', data),
-  getAlerts: (city, activity, persona) => 
-    api.get(`/api/alerts?city=${city}&activity=${activity}&persona=${persona}`),
+  getWeather: (city) => api.get(`/api/weather?city=${encodeURIComponent(city)}`),
+  getRecommendation: (data) => api.post('/api/recommend', data), // { city, persona }
+  getAlerts: (city, persona) =>
+    api.get(`/api/alerts?city=${encodeURIComponent(city)}&persona=${encodeURIComponent(persona)}`),
+  getPersonaInsights: (city, persona) =>
+    api.get(`/api/persona?city=${encodeURIComponent(city)}&persona=${encodeURIComponent(persona)}`),
   askAssistant: (data) => api.post('/api/assistant', data)
 };
 

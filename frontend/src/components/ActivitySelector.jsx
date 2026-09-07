@@ -1,44 +1,50 @@
-// frontend/src/components/ActivitySelector.jsx
-import React from 'react';
-import './ActivitySelector.css';
-
-const ACTIVITIES = ['Running', 'Cycling', 'Commute', 'Outdoor Event', 'Travel', 'Farming'];
-const PERSONAS = ['Fitness', 'Agriculture', 'Travel', 'Family', 'Commute', 'Events'];
-
-function ActivitySelector({ activity, persona, onActivityChange, onPersonaChange }) {
-  return (
-    <div className="selector">
-      <div className="selector-group">
-        <label className="selector-label">Activity</label>
-        <div className="selector-buttons">
-          {ACTIVITIES.map((act) => (
-            <button
-              key={act}
-              className={`selector-btn ${activity === act ? 'active' : ''}`}
-              onClick={() => onActivityChange(act)}
-            >
-              {act}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="selector-group">
-        <label className="selector-label">Persona</label>
-        <div className="selector-buttons">
-          {PERSONAS.map((pers) => (
-            <button
-              key={pers}
-              className={`selector-btn ${persona === pers ? 'active' : ''}`}
-              onClick={() => onPersonaChange(pers)}
-            >
-              {pers}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
+/* frontend/src/components/ActivitySelector.css */
+.selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  text-align: center;
 }
 
-export default ActivitySelector;
+.selector-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.selector-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.selector-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.selector-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.selector-btn.active {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: var(--cyan);
+  color: var(--cyan);
+  font-weight: 600;
+}

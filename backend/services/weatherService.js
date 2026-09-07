@@ -2,25 +2,13 @@
 const axios = require('axios');
 
 // ---------------------------------------------------------------------------
-// NOTE ON PROVIDER: This now uses WeatherAPI.com instead of Open-Meteo.
+// Uses WeatherAPI.com (see WEATHERAPI_KEY in .env). Free tier: 100,000
+// calls/month tied to your own key - not shared with strangers on the same
+// hosting IP like Open-Meteo's free tier was.
 //
-// Why: Open-Meteo's free tier requires no key, but is rate-limited PER IP
-// ADDRESS (not per app) - 600/min, 5,000/hour, 10,000/day. Render's free
-// hosting tier shares outbound IPs across many unrelated apps, so other
-// people's traffic on the same IP was exhausting our quota too, which is
-// what caused the repeated 429 errors. Open-Meteo does not offer a free
-// per-account API key for non-commercial use (their "API key" tier is a
-// paid commercial subscription).
-//
-// WeatherAPI.com's free tier (https://www.weatherapi.com/pricing.aspx) gives
-// 100,000 calls/month tied to YOUR OWN account/key, so it's no longer
-// affected by what anyone else on Render's shared IP is doing. It also
-// returns geocoding + current + hourly forecast in a SINGLE call (Open-Meteo
-// needed two calls: one to geocode, one for weather), which further cuts
-// our request volume in half.
-//
-// We still cache + de-dupe concurrent requests on top of this, both to stay
-// well under the generous free quota and to keep the app fast.
+// This file now also pulls: air quality (AQI), astronomy (sunrise/sunset),
+// visibility, and a 3-day daily forecast - all included free with the same
+// single API call - to power the persona-specific dashboard panels.
 // ---------------------------------------------------------------------------
 
 const WEATHERAPI_KEY = process.env.WEATHERAPI_KEY;
@@ -48,7 +36,6 @@ function setCache(key, data) {
 }
 
 // GET with automatic retry/backoff on 429 (rate limited) and 503 (overloaded).
-// Respects a Retry-After header if the API sends one.
 async function getWithRetry(url, retries = 3) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -64,13 +51,12 @@ async function getWithRetry(url, retries = 3) {
 
       const retryAfterHeader = error.response?.headers?.['retry-after'];
       const retryAfterMs = retryAfterHeader ? Number(retryAfterHeader) * 1000 : null;
-      const backoffMs = retryAfterMs || 500 * Math.pow(2, attempt); // 500ms, 1s, 2s...
+      const backoffMs = retryAfterMs || 500 * Math.pow(2, attempt);
       await new Promise((resolve) => setTimeout(resolve, backoffMs));
     }
   }
 }
 
-// Map a WeatherAPI hourly entry into our app's internal shape
 function mapHour(h) {
   return {
     time: h.time.replace(' ', 'T'),
@@ -80,13 +66,25 @@ function mapHour(h) {
     rain: h.chance_of_rain,
     wind: Math.round(h.wind_kph),
     uv: Math.round((h.uv || 0) * 10) / 10,
+    visibility: h.vis_km,
     weatherCode: h.condition?.code,
     condition: h.condition?.text || 'Unknown'
   };
 }
 
-// Fetch geocode + current + hourly forecast for a city in ONE call, then
-// build the same clean shape the rest of the app already expects.
+// US-EPA air quality index (1-6) -> human-readable category
+function epaCategory(index) {
+  const map = {
+    1: 'Good',
+    2: 'Moderate',
+    3: 'Unhealthy for Sensitive Groups',
+    4: 'Unhealthy',
+    5: 'Very Unhealthy',
+    6: 'Hazardous'
+  };
+  return map[index] || 'Unknown';
+}
+
 async function fetchFromWeatherApi(city) {
   if (!WEATHERAPI_KEY) {
     throw new Error(
@@ -94,7 +92,7 @@ async function fetchFromWeatherApi(city) {
     );
   }
 
-  const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHERAPI_KEY}&q=${encodeURIComponent(city)}&days=2&aqi=no&alerts=no`;
+  const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHERAPI_KEY}&q=${encodeURIComponent(city)}&days=3&aqi=yes&alerts=no`;
   const response = await getWithRetry(url);
   const data = response.data;
 
@@ -102,18 +100,42 @@ async function fetchFromWeatherApi(city) {
     throw new Error(`City not found: ${city}`);
   }
 
-  // Combine today + tomorrow's hourly arrays, then slice the next 24 hours
-  // starting from the current hour, so the forecast is always "from now",
-  // not just "today from midnight".
   const days = data.forecast?.forecastday || [];
   const allHours = days.flatMap(d => d.hour || []);
 
   const currentTime = data.current.last_updated; // e.g. "2026-09-06 18:45"
-  const currentHourStr = `${currentTime.slice(0, 13)}:00`; // "2026-09-06 18:00"
+  const currentHourStr = `${currentTime.slice(0, 13)}:00`;
   let startIndex = allHours.findIndex(h => h.time === currentHourStr);
   if (startIndex === -1) startIndex = 0;
 
   const next24 = allHours.slice(startIndex, startIndex + 24).map(mapHour);
+
+  // 3-day daily summary (for Event Planners, Agriculture frost/rainfall, etc.)
+  const daily = days.map(d => ({
+    date: d.date,
+    maxTemp: Math.round(d.day.maxtemp_c),
+    minTemp: Math.round(d.day.mintemp_c),
+    avgHumidity: Math.round(d.day.avghumidity),
+    totalPrecipMm: d.day.totalprecip_mm,
+    chanceOfRain: d.day.daily_chance_of_rain,
+    condition: d.day.condition?.text || 'Unknown',
+    uv: d.day.uv,
+    sunrise: d.astro?.sunrise,
+    sunset: d.astro?.sunset
+  }));
+
+  // Air quality (WeatherAPI free tier includes a limited version of this)
+  let airQuality = null;
+  const aq = data.current.air_quality;
+  if (aq) {
+    const epaIndex = aq['us-epa-index'];
+    airQuality = {
+      index: epaIndex,
+      category: epaCategory(epaIndex),
+      pm2_5: aq.pm2_5 != null ? Math.round(aq.pm2_5) : null,
+      pm10: aq.pm10 != null ? Math.round(aq.pm10) : null
+    };
+  }
 
   let locationString = data.location.name;
   if (data.location.region && data.location.region !== data.location.name) {
@@ -131,18 +153,18 @@ async function fetchFromWeatherApi(city) {
     humidity: data.current.humidity,
     wind: Math.round(data.current.wind_kph),
     uv: Math.round((data.current.uv || 0) * 10) / 10,
+    visibility: data.current.vis_km,
     rain: next24.length > 0 ? next24[0].rain : 0,
+    sunrise: daily[0]?.sunrise || null,
+    sunset: daily[0]?.sunset || null,
+    airQuality,
+    daily,
     hourly: next24
   };
 
   return weatherData;
 }
 
-// Main function to get weather for a city (cached + de-duped).
-// This is the function every route calls, so caching it here means
-// weather/recommend/alerts (which all call this) automatically share
-// one cached/coalesced result instead of hitting the API multiple times
-// per page load.
 async function getWeatherForCity(city) {
   const key = cacheKey(city);
 

@@ -1,7 +1,7 @@
-// backend/routes/alertRoutes.js
+// backend/routes/personaRoutes.js
 const express = require('express');
 const { getWeatherForCity } = require('../services/weatherService');
-const { generateAlerts } = require('../services/alertService');
+const { buildPersonaInsights } = require('../services/personaInsightsService');
 
 const router = express.Router();
 
@@ -11,11 +11,12 @@ router.get('/', async (req, res) => {
     const persona = req.query.persona || 'Fitness';
 
     const weatherData = await getWeatherForCity(city);
-    const alerts = generateAlerts(weatherData, persona);
+    const insights = await buildPersonaInsights(weatherData, persona);
 
     res.json({
       location: weatherData.location,
-      alerts: alerts
+      persona,
+      insights
     });
   } catch (error) {
     const status = error.response?.status;

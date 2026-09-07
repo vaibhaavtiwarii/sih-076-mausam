@@ -7,12 +7,12 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   try {
-    const { city, activity, persona } = req.body;
+    const { city, persona } = req.body;
     if (!city) return res.status(400).json({ error: 'City is required' });
-    if (!activity) return res.status(400).json({ error: 'Activity is required' });
+    if (!persona) return res.status(400).json({ error: 'Persona is required' });
 
     const weatherData = await getWeatherForCity(city);
-    const recommendation = getRecommendation(weatherData, activity, persona || 'General');
+    const recommendation = getRecommendation(weatherData, persona);
 
     res.json({
       location: weatherData.location,

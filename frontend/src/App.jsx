@@ -6,6 +6,7 @@ import RecommendationCard from './components/RecommendationCard';
 import AlertList from './components/AlertList';
 import Assistant from './components/Assistant';
 import ActivitySelector from './components/ActivitySelector';
+import PersonaPanel from './components/PersonaPanel';
 import CitySelect from './components/CitySelect';
 import './App.css';
 
@@ -14,29 +15,33 @@ function App() {
   const [stage, setStage] = useState('landing');
   const [city, setCity] = useState('');
   const [inputCity, setInputCity] = useState('');
-  const [activity, setActivity] = useState('Running');
   const [persona, setPersona] = useState('Fitness');
   const [weather, setWeather] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  const fetchAllData = async (cityName, act, pers) => {
+  const fetchAllData = async (cityName, pers) => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch weather, recommendations, and alerts in parallel
-      const [weatherRes, recRes, alertRes] = await Promise.all([
+      // Fetch weather, recommendation, alerts, and persona insights in parallel.
+      // The backend caches/de-dupes the underlying weather lookup, so this
+      // doesn't multiply external API calls.
+      const [weatherRes, recRes, alertRes, personaRes] = await Promise.all([
         weatherApi.getWeather(cityName),
-        weatherApi.getRecommendation({ city: cityName, activity: act, persona: pers }),
-        weatherApi.getAlerts(cityName, act, pers)
+        weatherApi.getRecommendation({ city: cityName, persona: pers }),
+        weatherApi.getAlerts(cityName, pers),
+        weatherApi.getPersonaInsights(cityName, pers)
       ]);
 
       setWeather(weatherRes.data);
       setRecommendation(recRes.data.recommendation);
       setAlerts(alertRes.data.alerts);
+      setInsights(personaRes.data.insights);
       setLastUpdated(new Date().toLocaleTimeString());
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -46,12 +51,12 @@ function App() {
     }
   };
 
-  // Fetch whenever we're on the dashboard and city/activity/persona changes
+  // Fetch whenever we're on the dashboard and city/persona changes
   useEffect(() => {
     if (stage === 'dashboard' && city) {
-      fetchAllData(city, activity, persona);
+      fetchAllData(city, persona);
     }
-  }, [stage, city, activity, persona]);
+  }, [stage, city, persona]);
 
   // Called from the landing screen once a city has been chosen
   const handleLocationConfirmed = (selectedCity) => {
@@ -65,6 +70,7 @@ function App() {
     setWeather(null);
     setRecommendation(null);
     setAlerts([]);
+    setInsights(null);
     setStage('landing');
   };
 
@@ -73,11 +79,6 @@ function App() {
     if (inputCity.trim()) {
       setCity(inputCity.trim());
     }
-  };
-
-  const handleActivityChange = (newActivity) => {
-    setActivity(newActivity);
-    // Map activity to persona if needed, but keep it separate for flexibility
   };
 
   const handlePersonaChange = (newPersona) => {
@@ -124,11 +125,9 @@ function App() {
       </header>
 
       <main className="app-main">
-        {/* Activity / Persona Selector */}
+        {/* "What describes you?" persona selector */}
         <ActivitySelector
-          activity={activity}
           persona={persona}
-          onActivityChange={handleActivityChange}
           onPersonaChange={handlePersonaChange}
         />
 
@@ -153,13 +152,12 @@ function App() {
               </div>
             </div>
 
+            {/* Persona-specific panel (Wellness/Fitness/Surfer/Traveler/etc.) */}
+            <PersonaPanel persona={persona} insights={insights} city={city} />
+
             {/* Assistant Section */}
             <div className="assistant-section">
-              <Assistant
-                city={city}
-                activity={activity}
-                persona={persona}
-              />
+              <Assistant city={city} persona={persona} />
             </div>
           </>
         )}

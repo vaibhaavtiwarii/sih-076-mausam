@@ -1,54 +1,70 @@
 // backend/services/recommendationService.js
+// Scoring weights per PERSONA (previously this was keyed by "activity" -
+// Running/Cycling/etc. - now that the Activity selector has been removed,
+// the persona alone drives which factors matter most).
 
-// Configuration for each activity
-const ACTIVITY_WEIGHTS = {
-  Running: {
-    temperature: { ideal: 18, range: 5, weight: 25 }, // 15-21°C ideal
+const PERSONA_WEIGHTS = {
+  Wellness: {
+    temperature: { ideal: 22, range: 6, weight: 15 },
+    uv: { ideal: 0, max: 10, weight: 30 },
+    rain: { ideal: 0, max: 100, weight: 20 },
+    wind: { ideal: 5, max: 30, weight: 10 },
+    humidity: { ideal: 45, max: 100, weight: 25 }
+  },
+  Fitness: {
+    temperature: { ideal: 18, range: 5, weight: 25 },
     uv: { ideal: 0, max: 10, weight: 20 },
     rain: { ideal: 0, max: 100, weight: 25 },
     wind: { ideal: 5, max: 30, weight: 15 },
     humidity: { ideal: 50, max: 100, weight: 15 }
   },
-  Cycling: {
-    temperature: { ideal: 22, range: 8, weight: 20 },
-    uv: { ideal: 0, max: 10, weight: 15 },
-    rain: { ideal: 0, max: 100, weight: 30 },
-    wind: { ideal: 8, max: 40, weight: 20 },
-    humidity: { ideal: 55, max: 100, weight: 15 }
-  },
-  Commute: {
-    temperature: { ideal: 25, range: 10, weight: 15 },
+  Surfer: {
+    temperature: { ideal: 26, range: 10, weight: 10 },
     uv: { ideal: 0, max: 10, weight: 10 },
-    rain: { ideal: 0, max: 100, weight: 40 },
-    wind: { ideal: 10, max: 50, weight: 20 },
+    rain: { ideal: 0, max: 100, weight: 25 },
+    wind: { ideal: 15, max: 45, weight: 40 },
     humidity: { ideal: 60, max: 100, weight: 15 }
   },
-  'Outdoor Event': {
-    temperature: { ideal: 24, range: 8, weight: 25 },
-    uv: { ideal: 0, max: 10, weight: 15 },
-    rain: { ideal: 0, max: 100, weight: 35 },
-    wind: { ideal: 5, max: 35, weight: 15 },
-    humidity: { ideal: 55, max: 100, weight: 10 }
-  },
-  Travel: {
+  Traveler: {
     temperature: { ideal: 26, range: 12, weight: 15 },
     uv: { ideal: 0, max: 10, weight: 10 },
     rain: { ideal: 0, max: 100, weight: 40 },
     wind: { ideal: 10, max: 50, weight: 20 },
     humidity: { ideal: 60, max: 100, weight: 15 }
   },
-  Farming: {
+  Family: {
+    temperature: { ideal: 24, range: 8, weight: 20 },
+    uv: { ideal: 0, max: 10, weight: 15 },
+    rain: { ideal: 0, max: 100, weight: 40 },
+    wind: { ideal: 5, max: 35, weight: 15 },
+    humidity: { ideal: 55, max: 100, weight: 10 }
+  },
+  Agriculture: {
     temperature: { ideal: 28, range: 8, weight: 20 },
     uv: { ideal: 0, max: 10, weight: 10 },
-    rain: { ideal: 30, max: 100, weight: 35 }, // Some rain is good for farming
+    rain: { ideal: 30, max: 100, weight: 35 }, // some rain is good for farming
     wind: { ideal: 5, max: 40, weight: 20 },
     humidity: { ideal: 65, max: 100, weight: 15 }
+  },
+  Commuter: {
+    temperature: { ideal: 25, range: 10, weight: 15 },
+    uv: { ideal: 0, max: 10, weight: 10 },
+    rain: { ideal: 0, max: 100, weight: 40 },
+    wind: { ideal: 10, max: 50, weight: 20 },
+    humidity: { ideal: 60, max: 100, weight: 15 }
+  },
+  'Event Planner': {
+    temperature: { ideal: 24, range: 8, weight: 25 },
+    uv: { ideal: 0, max: 10, weight: 15 },
+    rain: { ideal: 0, max: 100, weight: 35 },
+    wind: { ideal: 5, max: 35, weight: 15 },
+    humidity: { ideal: 55, max: 100, weight: 10 }
   }
 };
 
-// Score a single hour
-function scoreHour(hour, activity) {
-  const weights = ACTIVITY_WEIGHTS[activity];
+// Score a single hour for a given persona
+function scoreHour(hour, persona) {
+  const weights = PERSONA_WEIGHTS[persona];
   if (!weights) return { score: 50, factors: [] };
 
   const factors = [];
@@ -62,7 +78,7 @@ function scoreHour(hour, activity) {
   factors.push({
     factor: 'temperature',
     impact: tempScore > 60 ? 'positive' : 'negative',
-    message: `Temperature is ${hour.temperature}°C. ${tempScore > 60 ? 'Good for activity.' : 'May feel uncomfortable.'}`
+    message: `Temperature is ${hour.temperature}°C. ${tempScore > 60 ? 'Good for this.' : 'May feel uncomfortable.'}`
   });
   weightedScore += tempScore * weights.temperature.weight;
   totalWeight += weights.temperature.weight;
@@ -79,8 +95,7 @@ function scoreHour(hour, activity) {
 
   // Rain
   let rainScore = 0;
-  if (activity === 'Farming') {
-    // For farming, moderate rain is good
+  if (persona === 'Agriculture') {
     const rainOptimal = weights.rain.ideal;
     const rainDiff = Math.abs(hour.rain - rainOptimal);
     rainScore = Math.max(0, 100 - (rainDiff / weights.rain.max) * 50);
@@ -123,14 +138,13 @@ function scoreHour(hour, activity) {
   return { score: overallScore, factors };
 }
 
-// Find the best 75-minute window in the next 12 hours
-function findBestWindow(hourlyData, activity) {
+// Find the best 3-hour window in the next 12 hours
+function findBestWindow(hourlyData, persona) {
   const scored = hourlyData.slice(0, 12).map((hour, index) => {
-    const result = scoreHour(hour, activity);
+    const result = scoreHour(hour, persona);
     return { ...hour, index, score: result.score, factors: result.factors };
   });
 
-  // Find 3 consecutive hours with max average score
   let bestAvg = 0;
   let bestStart = 0;
   for (let i = 0; i <= scored.length - 3; i++) {
@@ -144,42 +158,34 @@ function findBestWindow(hourlyData, activity) {
   const windowHours = scored.slice(bestStart, bestStart + 3);
   const avgScore = Math.round(bestAvg);
 
-  // Extract reasons from the first hour of the window
   const reasons = windowHours[0].factors
     .filter(f => f.impact === 'positive')
     .map(f => f.message);
 
-  // Format time
   const startTime = new Date(windowHours[0].time);
   const endTime = new Date(windowHours[2].time);
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  };
+  const formatTime = (date) => date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
   return {
     score: avgScore,
     bestWindow: `${formatTime(startTime)} – ${formatTime(endTime)}`,
-    reasons: reasons.length > 0 ? reasons : ['Conditions are acceptable for this activity.'],
+    reasons: reasons.length > 0 ? reasons : ['Conditions are acceptable.'],
     detailedFactors: windowHours[0].factors
   };
 }
 
-function getRecommendation(weatherData, activity, persona) {
-  // Persona slightly adjusts the activity, but we use activity as the primary driver.
-  // For now, persona influences the tone of reasons, but we keep scoring based on activity.
-  const result = findBestWindow(weatherData.hourly, activity);
+function getRecommendation(weatherData, persona) {
+  const result = findBestWindow(weatherData.hourly, persona);
 
-  // Add a warning if the score is low
   let warnings = [];
   if (result.score < 50) {
-    warnings.push('Conditions are not ideal for this activity.');
+    warnings.push('Conditions are not ideal right now.');
   }
   if (result.score < 30) {
-    warnings.push('Strongly advise rescheduling this activity.');
+    warnings.push('Strongly consider rescheduling if possible.');
   }
 
   return {
-    activity: activity,
     persona: persona,
     score: result.score,
     bestWindow: result.bestWindow,
