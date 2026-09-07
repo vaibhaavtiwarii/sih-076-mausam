@@ -142,22 +142,6 @@ function App() {
               {/* Left column: Weather + Forecast */}
               <div className="column primary">
                 <WeatherCard weather={weather} />
-                {/* Hourly forecast mini */}
-                <div className="hourly-forecast">
-                  <h3>Hourly Forecast</h3>
-                  <div className="hourly-scroll">
-                    {weather.hourly && weather.hourly.slice(0, 12).map((hour, idx) => (
-                      <div key={idx} className="hour-item">
-                        <div className="hour-time">
-                          {new Date(hour.time).toLocaleTimeString('en-US', { hour: 'numeric', hour12: true })}
-                        </div>
-                        <div className="hour-temp">{hour.temperature}°</div>
-                        <div className="hour-icon">{hour.condition.split(' ')[0]}</div>
-                        <div className="hour-rain">{hour.rain}%</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               {/* Right column: Recommendations + Alerts */}

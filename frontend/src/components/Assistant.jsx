@@ -16,7 +16,6 @@ function Assistant({ city, activity, persona }) { // We accept props, but we won
     setLoading(true);
     setError(null);
     try {
-      // New way: Send ONLY the prompt to Gemini
       const res = await weatherApi.askAssistant({
         prompt: question.trim()
       });
@@ -38,8 +37,7 @@ function Assistant({ city, activity, persona }) { // We accept props, but we won
     <div className="assistant">
       <div className="assistant-header">
         <h3>🤖 Ask MAUSAM AI</h3>
-        {/* Changed from "Demo Reasoning Mode" */}
-        <span className="assistant-mode">Powered by Gemini AI</span> 
+        <span className="assistant-mode">Powered by Llama (Groq)</span> 
       </div>
 
       <div className="quick-prompts">
@@ -79,12 +77,10 @@ function Assistant({ city, activity, persona }) { // We accept props, but we won
       {response && (
         <div className="assistant-response">
           <div className="response-question">Q: {question}</div>
-          {/* Changed from response.response to response.reply */}
           <div className="response-answer">A: {response.reply}</div>
           <div className="response-meta">
-            {/* Changed response.mode and response.location */}
             <span>AI Smart Assistant</span>
-            <span>📍 Auto-detected by Gemini</span>
+            <span>📍 Auto-detected by MAUSAM AI</span>
           </div>
         </div>
       )}
