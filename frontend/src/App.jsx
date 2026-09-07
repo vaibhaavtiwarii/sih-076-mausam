@@ -6,6 +6,8 @@ import RecommendationCard from './components/RecommendationCard';
 import AlertList from './components/AlertList';
 import AirQualityCard from './components/AirQualityCard';
 import SavedLocationsCard from './components/SavedLocationsCard';
+import MapView from './components/MapView';
+import LoadingScreen from './components/LoadingScreen';
 import Assistant from './components/Assistant';
 import ActivitySelector from './components/ActivitySelector';
 import PersonaPanel from './components/PersonaPanel';
@@ -135,14 +137,19 @@ function App() {
 
         {error && <div className="error-banner">{error}</div>}
 
-        {loading && <div className="loading">Loading your personalized weather intelligence...</div>}
+        {loading && <LoadingScreen />}
 
         {!loading && weather && (
           <>
             <div className="dashboard-grid">
-              {/* Left column: Weather + Forecast */}
+              {/* Left column: Weather + Forecast + Map */}
               <div className="column primary">
                 <WeatherCard weather={weather} />
+                <MapView
+                  latitude={weather?.latitude}
+                  longitude={weather?.longitude}
+                  location={weather?.location}
+                />
               </div>
 
               {/* Right column: Recommendations + Air Quality + Alerts + Saved Locations */}
