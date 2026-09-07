@@ -37,7 +37,6 @@ function Assistant({ city, activity, persona }) { // We accept props, but we won
     <div className="assistant">
       <div className="assistant-header">
         <h3>🤖 Ask MAUSAM AI</h3>
-        <span className="assistant-mode">Powered by Llama (Groq)</span> 
       </div>
 
       <div className="quick-prompts">
