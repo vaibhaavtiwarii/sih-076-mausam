@@ -1,53 +1,38 @@
-/* frontend/src/components/ActivitySelector.css */
-.selector {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
-  padding: 20px;
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid var(--border-subtle);
-  text-align: center;
+// frontend/src/components/ActivitySelector.jsx
+import React from 'react';
+import Icon from './Icon';
+import './ActivitySelector.css';
+
+const PERSONAS = [
+  { name: 'Wellness', icon: 'sparkle' },
+  { name: 'Fitness', icon: 'fitness' },
+  { name: 'Surfer', icon: 'wind' },
+  { name: 'Traveler', icon: 'plane' },
+  { name: 'Family', icon: 'users' },
+  { name: 'Agriculture', icon: 'leaf' },
+  { name: 'Commuter', icon: 'car' },
+  { name: 'Event Planner', icon: 'event' },
+];
+
+function ActivitySelector({ persona, onPersonaChange }) {
+  return (
+    <div className="selector">
+      <span className="selector-label">What describes you?</span>
+      <div className="selector-buttons">
+        {PERSONAS.map(({ name, icon }) => (
+          <button
+            key={name}
+            type="button"
+            className={`selector-btn ${persona === name ? 'active' : ''}`}
+            onClick={() => onPersonaChange(name)}
+          >
+            <Icon name={icon} size={16} />
+            {name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-.selector-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.selector-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
-
-.selector-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 1px solid var(--border-subtle);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.selector-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-}
-
-.selector-btn.active {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: var(--cyan);
-  color: var(--cyan);
-  font-weight: 600;
-}
+export default ActivitySelector;
