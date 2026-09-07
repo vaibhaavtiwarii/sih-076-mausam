@@ -4,6 +4,8 @@ import { weatherApi } from './api';
 import WeatherCard from './components/WeatherCard';
 import RecommendationCard from './components/RecommendationCard';
 import AlertList from './components/AlertList';
+import AirQualityCard from './components/AirQualityCard';
+import SavedLocationsCard from './components/SavedLocationsCard';
 import Assistant from './components/Assistant';
 import ActivitySelector from './components/ActivitySelector';
 import PersonaPanel from './components/PersonaPanel';
@@ -143,12 +145,16 @@ function App() {
                 <WeatherCard weather={weather} />
               </div>
 
-              {/* Right column: Recommendations + Alerts */}
+              {/* Right column: Recommendations + Air Quality + Alerts + Saved Locations */}
               <div className="column secondary">
                 {recommendation && (
                   <RecommendationCard recommendation={recommendation} />
                 )}
+                {weather?.airQuality && (
+                  <AirQualityCard airQuality={weather.airQuality} />
+                )}
                 <AlertList alerts={alerts} />
+                <SavedLocationsCard city={city} onSelectCity={setCity} />
               </div>
             </div>
 

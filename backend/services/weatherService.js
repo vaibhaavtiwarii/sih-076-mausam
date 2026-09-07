@@ -171,8 +171,10 @@ async function fetchFromWeatherApi(city) {
     airQuality = {
       index: epaIndex,
       category: epaCategory(epaIndex),
-      pm2_5: aq.pm2_5 != null ? Math.round(aq.pm2_5) : null,
-      pm10: aq.pm10 != null ? Math.round(aq.pm10) : null
+      pm2_5: aq.pm2_5 != null ? Math.round(aq.pm2_5 * 10) / 10 : null,
+      pm10: aq.pm10 != null ? Math.round(aq.pm10 * 10) / 10 : null,
+      no2: aq.no2 != null ? Math.round(aq.no2 * 10) / 10 : null,
+      o3: aq.o3 != null ? Math.round(aq.o3 * 10) / 10 : null
     };
   }
 

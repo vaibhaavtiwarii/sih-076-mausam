@@ -1,0 +1,91 @@
+/* frontend/src/components/SavedLocationsCard.css */
+.saved-locations-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow);
+}
+
+.saved-locations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.saved-locations-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.save-current-btn {
+  background: rgba(45, 212, 191, 0.1);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.save-current-btn:hover:not(:disabled) {
+  background: rgba(45, 212, 191, 0.2);
+}
+
+.save-current-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.no-saved-locations {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+.saved-locations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.saved-location-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.saved-location-name {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  flex: 1;
+}
+
+.saved-location-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.saved-location-remove:hover {
+  opacity: 1;
+}
