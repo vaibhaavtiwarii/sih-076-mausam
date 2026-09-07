@@ -1,0 +1,31 @@
+/* frontend/src/components/ScoreRing.css */
+.score-ring {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.score-ring-progress {
+  transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease;
+}
+
+.score-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-ring-number {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.score-ring-unit {
+  font-size: 9px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}

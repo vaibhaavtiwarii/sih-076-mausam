@@ -1,17 +1,12 @@
 // frontend/src/components/RecommendationCard.jsx
 import React from 'react';
+import ScoreRing from './ScoreRing';
 import './RecommendationCard.css';
 
 function RecommendationCard({ recommendation }) {
   if (!recommendation) return null;
 
   const { persona, score, bestWindow, reasons, warnings } = recommendation;
-
-  const getScoreColor = (s) => {
-    if (s >= 80) return '#2dd4bf';
-    if (s >= 60) return '#fbbf24';
-    return '#f87171';
-  };
 
   return (
     <div className="rec-card">
@@ -21,10 +16,7 @@ function RecommendationCard({ recommendation }) {
           <span className="rec-persona-badge">{persona}</span>
         </div>
         <div className="rec-score">
-          <div className="score-circle" style={{ borderColor: getScoreColor(score) }}>
-            <span className="score-number">{score}</span>
-            <span className="score-label">/100</span>
-          </div>
+          <ScoreRing score={score} size={64} strokeWidth={5} />
         </div>
       </div>
 

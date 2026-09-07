@@ -69,40 +69,60 @@ async function getWeatherContext(city) {
     };
 }
 
+// Short, persona-specific framing so the same weather data gets read through
+// the lens the user actually cares about, instead of one generic answer.
+const PERSONA_FRAMING = {
+    Wellness: 'Focus on air quality, UV, and humidity, and how they affect general wellbeing.',
+    Fitness: 'Focus on temperature, UV, and wind as they affect outdoor workouts (running/cycling), and suggest the best time window if relevant.',
+    Surfer: 'Focus on wind, wave/marine conditions if mentioned, and general beach safety.',
+    Traveler: 'Focus on rain risk, visibility, and temperature swings that could affect travel or packing.',
+    Family: 'Focus on school-commute and kid-friendly framing: rain gear, temperature for playing outside, UV for sun protection.',
+    Agriculture: 'Focus on rainfall, soil moisture, and frost risk as they affect fieldwork, sowing, or irrigation timing.',
+    Commuter: 'Focus on rain during peak commute hours, visibility/fog, and wind as they affect driving or transit.',
+    'Event Planner': 'Focus on rain probability, wind, and overall comfort for outdoor setup and guest comfort.'
+};
+
 router.post('/', async (req, res) => {
     try {
-        const { prompt } = req.body;
+        const { prompt, city: selectedCity, persona } = req.body;
+        const personaNote = persona && PERSONA_FRAMING[persona]
+            ? ` The user's profile is "${persona}". ${PERSONA_FRAMING[persona]}`
+            : '';
 
-        // Step 1: Ask the model to pull out a city name from the user's message, if any.
-        const extractRaw = await callGroq(
-            [
-                {
-                    role: 'system',
-                    content: 'Extract the city name the user is asking about, if any is mentioned or clearly implied. Respond ONLY with JSON in this exact shape: {"city": "CityName"} or {"city": null} if no city is mentioned.'
-                },
-                { role: 'user', content: prompt }
-            ],
-            { response_format: { type: 'json_object' } }
-        );
-
-        let city = null;
-        try {
-            const parsed = JSON.parse(extractRaw);
-            city = parsed.city || null;
-        } catch (parseErr) {
-            city = null; // if parsing fails, just proceed without weather context
+        // If the frontend already knows which city is selected, use it directly
+        // instead of burning a second LLM call re-extracting it - the extraction
+        // step is now only a fallback for when no city is selected yet, or the
+        // user explicitly asks about a different city inline.
+        let city = selectedCity || null;
+        if (!city) {
+            const extractRaw = await callGroq(
+                [
+                    {
+                        role: 'system',
+                        content: 'Extract the city name the user is asking about, if any is mentioned or clearly implied. Respond ONLY with JSON in this exact shape: {"city": "CityName"} or {"city": null} if no city is mentioned.'
+                    },
+                    { role: 'user', content: prompt }
+                ],
+                { response_format: { type: 'json_object' } }
+            );
+            try {
+                const parsed = JSON.parse(extractRaw);
+                city = parsed.city || null;
+            } catch (parseErr) {
+                city = null; // if parsing fails, just proceed without weather context
+            }
         }
 
         let messages;
         if (city) {
             const weatherData = await getWeatherContext(city);
             messages = [
-                { role: 'system', content: 'You are MAUSAM AI, a helpful weather assistant. Answer in a friendly, concise way (2-4 sentences), using the provided weather data.' },
+                { role: 'system', content: `You are MAUSAM AI, a helpful weather assistant. Answer in a friendly, concise way (2-4 sentences), using the provided weather data.${personaNote}` },
                 { role: 'user', content: `Live weather data for ${city}: ${JSON.stringify(weatherData)}\n\nUser question: "${prompt}"` }
             ];
         } else {
             messages = [
-                { role: 'system', content: 'You are MAUSAM AI, a helpful weather assistant. If the user has not mentioned a city, politely ask which city they mean.' },
+                { role: 'system', content: `You are MAUSAM AI, a helpful weather assistant. If the user has not mentioned a city, politely ask which city they mean.${personaNote}` },
                 { role: 'user', content: prompt }
             ];
         }

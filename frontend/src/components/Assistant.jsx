@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { weatherApi } from '../api';
 import './Assistant.css';
 
-function Assistant({ city, activity, persona }) { // We accept props, but we won't send them to the AI
+function Assistant({ city, persona }) {
   const [question, setQuestion] = useState('');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,9 @@ function Assistant({ city, activity, persona }) { // We accept props, but we won
     setError(null);
     try {
       const res = await weatherApi.askAssistant({
-        prompt: question.trim()
+        prompt: question.trim(),
+        city,
+        persona
       });
       setResponse(res.data);
     } catch (err) {
@@ -79,7 +81,7 @@ function Assistant({ city, activity, persona }) { // We accept props, but we won
           <div className="response-answer">A: {response.reply}</div>
           <div className="response-meta">
             <span>AI Smart Assistant</span>
-            <span>📍 Auto-detected by MAUSAM AI</span>
+            <span>📍 {city} · {persona}</span>
           </div>
         </div>
       )}
