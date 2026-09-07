@@ -85,6 +85,44 @@ function epaCategory(index) {
   return map[index] || 'Unknown';
 }
 
+const RESOLVE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h - name->id mapping barely changes
+const resolveCache = new Map(); // raw city text -> { data, expiresAt }
+
+// WeatherAPI's forecast.json resolves a bare name like "Delhi" using its own
+// internal ranking, which isn't India-biased - it can land on Delhi, Ontario,
+// Canada instead of Delhi, India. To fix that, look the name up via
+// search.json first (which returns every match with its country), prefer an
+// Indian match when one exists, and pass its unique location `id` back to
+// forecast.json instead of the bare name - `id:<n>` bypasses name ambiguity
+// entirely. If the user already typed something specific like "Delhi, Canada"
+// (has a comma), trust them and skip this - they clearly picked a location.
+async function resolveCityQuery(city) {
+  if (city.includes(',')) return city;
+
+  const key = cacheKey(city);
+  const cached = resolveCache.get(key);
+  if (cached && Date.now() < cached.expiresAt) return cached.data;
+
+  try {
+    const url = `https://api.weatherapi.com/v1/search.json?key=${WEATHERAPI_KEY}&q=${encodeURIComponent(city)}`;
+    const response = await getWithRetry(url);
+    const matches = response.data;
+
+    if (!Array.isArray(matches) || matches.length === 0) return city;
+
+    const indiaMatch = matches.find(m => m.country === 'India');
+    const chosen = indiaMatch || matches[0];
+    const resolved = `id:${chosen.id}`;
+
+    resolveCache.set(key, { data: resolved, expiresAt: Date.now() + RESOLVE_CACHE_TTL_MS });
+    return resolved;
+  } catch (err) {
+    // If the search lookup itself fails, fall back to the raw name rather
+    // than blocking the whole request - forecast.json will still try its best.
+    return city;
+  }
+}
+
 async function fetchFromWeatherApi(city) {
   if (!WEATHERAPI_KEY) {
     throw new Error(
@@ -92,7 +130,8 @@ async function fetchFromWeatherApi(city) {
     );
   }
 
-  const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHERAPI_KEY}&q=${encodeURIComponent(city)}&days=3&aqi=yes&alerts=no`;
+  const resolvedQuery = await resolveCityQuery(city);
+  const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHERAPI_KEY}&q=${encodeURIComponent(resolvedQuery)}&days=3&aqi=yes&alerts=no`;
   const response = await getWithRetry(url);
   const data = response.data;
 
