@@ -17,7 +17,9 @@ export const weatherApi = {
     api.get(`/api/alerts?city=${encodeURIComponent(city)}&persona=${encodeURIComponent(persona)}`),
   getPersonaInsights: (city, persona) =>
     api.get(`/api/persona?city=${encodeURIComponent(city)}&persona=${encodeURIComponent(persona)}`),
-  askAssistant: (data) => api.post('/api/assistant', data)
+  askAssistant: (data) => api.post('/api/assistant', data),
+  getZone: (lat, lng, persona) =>
+    api.get(`/api/zone?lat=${lat}&lng=${lng}&persona=${encodeURIComponent(persona)}`)
 };
 
 export default api;

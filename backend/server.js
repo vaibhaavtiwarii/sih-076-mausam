@@ -8,6 +8,7 @@ const recommendationRoutes = require('./routes/recommendationRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const assistantRoutes = require('./routes/assistantRoutes');
 const personaRoutes = require('./routes/personaRoutes');
+const zoneRoutes = require('./routes/zoneRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -31,6 +32,7 @@ app.use('/api/recommend', recommendationRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/persona', personaRoutes);
+app.use('/api/zone', zoneRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

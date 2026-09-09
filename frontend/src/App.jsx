@@ -149,6 +149,7 @@ function App() {
                   latitude={weather?.latitude}
                   longitude={weather?.longitude}
                   location={weather?.location}
+                  persona={persona}
                 />
               </div>
 
