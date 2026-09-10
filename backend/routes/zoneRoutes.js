@@ -19,14 +19,31 @@ const { scoreHour } = require('../services/recommendationService');
 const GRID_SIZE = 3; // 3x3 = 9 points total
 const GRID_SPACING_DEG = 0.12; // ~13km at the equator, closer near the poles
 
+// A perfectly regular grid reads as an obvious checkerboard on the rendered
+// heatmap (every blob the same distance apart, visibly aligned). Nudging
+// each point by a small deterministic offset breaks that lattice look while
+// staying reproducible - the SAME (row, col) always jitters the SAME way,
+// so panning back to a spot you've already seen still hits the weather
+// cache instead of drifting to new coordinates on every request.
+function deterministicJitter(row, col) {
+  // A cheap pseudo-random value in [-1, 1] derived from the cell's own
+  // index, not Math.random() - reproducible across requests.
+  const seed = Math.sin(row * 12.9898 + col * 78.233) * 43758.5453;
+  return (seed - Math.floor(seed)) * 2 - 1;
+}
+
 function buildGridPoints(centerLat, centerLng) {
   const points = [];
   const offset = Math.floor(GRID_SIZE / 2);
+  const jitterRange = GRID_SPACING_DEG * 0.4; // up to 40% of spacing, keeps points from crossing over each other
+
   for (let row = -offset; row <= offset; row++) {
     for (let col = -offset; col <= offset; col++) {
+      const latJitter = deterministicJitter(row, col) * jitterRange;
+      const lngJitter = deterministicJitter(col, row) * jitterRange; // swapped args so lat/lng don't jitter identically
       points.push({
-        lat: Math.round((centerLat + row * GRID_SPACING_DEG) * 10000) / 10000,
-        lng: Math.round((centerLng + col * GRID_SPACING_DEG) * 10000) / 10000
+        lat: Math.round((centerLat + row * GRID_SPACING_DEG + latJitter) * 10000) / 10000,
+        lng: Math.round((centerLng + col * GRID_SPACING_DEG + lngJitter) * 10000) / 10000
       });
     }
   }

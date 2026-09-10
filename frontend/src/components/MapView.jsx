@@ -58,8 +58,8 @@ function HeatZoneLayer({ points }) {
 
     if (!layerRef.current) {
       layerRef.current = L.heatLayer(latLngs, {
-        radius: 55,
-        blur: 45,
+        radius: 70,
+        blur: 55,
         maxZoom: 14,
         max: 1.0,
         minOpacity: 0.35,
