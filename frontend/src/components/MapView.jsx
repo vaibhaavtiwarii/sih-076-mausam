@@ -1,8 +1,9 @@
 // frontend/src/components/MapView.jsx
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap } from 'react-leaflet';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import 'leaflet.heat';
 import { weatherApi } from '../api';
 import './MapView.css';
 
@@ -19,64 +20,115 @@ const markerIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Recenters the map when the city (and therefore lat/lng) changes, since
-// MapContainer only reads its `center` prop on first mount.
-function Recenter({ lat, lng }) {
+// Red (bad) -> orange -> yellow-green -> teal (good), keyed 0-1 as
+// leaflet.heat expects. This turns a persona score into a smooth blended
+// gradient instead of discrete colored circles.
+const ZONE_GRADIENT = {
+  0.0: '#f87171',
+  0.35: '#fb923c',
+  0.6: '#a3e635',
+  1.0: '#2dd4bf'
+};
+
+const DEBOUNCE_MS = 700; // wait for panning/zooming to settle before refetching
+
+// Recenters the map only on first load (city change) - not on every pan,
+// since the whole point of this component is to let the user pan freely
+// and have zones follow them without being yanked back to the city center.
+function RecenterOnce({ lat, lng }) {
   const map = useMap();
+  const didInit = useRef(false);
   useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
     map.setView([lat, lng], map.getZoom());
   }, [lat, lng, map]);
   return null;
 }
 
-// 0-100 persona score -> a color on a green (good) to red (unhealthy) scale,
-// matching the same language used in AirQualityCard/ScoreRing elsewhere in
-// the app so the map doesn't introduce a fourth different color system.
-function scoreToColor(score) {
-  if (score >= 75) return '#2dd4bf'; // Good
-  if (score >= 55) return '#a3e635'; // Moderate
-  if (score >= 35) return '#fb923c'; // Poor
-  return '#f87171'; // Unhealthy
+// Draws the actual heat layer imperatively (leaflet.heat isn't a React
+// component - it mutates the underlying Leaflet map directly) and keeps it
+// in sync whenever the scored points change.
+function HeatZoneLayer({ points }) {
+  const map = useMap();
+  const layerRef = useRef(null);
+
+  useEffect(() => {
+    const latLngs = points.map((p) => [p.lat, p.lng, p.score / 100]);
+
+    if (!layerRef.current) {
+      layerRef.current = L.heatLayer(latLngs, {
+        radius: 55,
+        blur: 45,
+        maxZoom: 14,
+        max: 1.0,
+        minOpacity: 0.35,
+        gradient: ZONE_GRADIENT
+      }).addTo(map);
+    } else {
+      layerRef.current.setLatLngs(latLngs);
+    }
+
+    return () => {
+      // Only remove on unmount, not on every point update - setLatLngs
+      // above handles updates without tearing the layer down and back up.
+    };
+  }, [points, map]);
+
+  useEffect(() => {
+    return () => {
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current);
+        layerRef.current = null;
+      }
+    };
+  }, [map]);
+
+  return null;
 }
 
-const LEGEND_ITEMS = [
-  { label: 'Good', color: '#2dd4bf' },
-  { label: 'Moderate', color: '#a3e635' },
-  { label: 'Poor', color: '#fb923c' },
-  { label: 'Unhealthy', color: '#f87171' }
-];
+// Watches for the user panning/zooming and reports the new center (debounced)
+// so the parent can fetch zone data for wherever they've scrolled to, not
+// just the original city.
+function ViewTracker({ onViewChange }) {
+  const timerRef = useRef(null);
 
-function ZoneOverlay({ points }) {
-  return points.map((point, i) => (
-    <Circle
-      key={`${point.lat}-${point.lng}-${i}`}
-      center={[point.lat, point.lng]}
-      radius={7000}
-      pathOptions={{
-        color: scoreToColor(point.score),
-        fillColor: scoreToColor(point.score),
-        fillOpacity: 0.35,
-        weight: 1
-      }}
-    >
-      <Tooltip direction="top" opacity={0.9}>
-        {point.category} · Score {point.score}/100
-      </Tooltip>
-    </Circle>
-  ));
+  const handleMove = useCallback((map) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      const center = map.getCenter();
+      onViewChange(center.lat, center.lng);
+    }, DEBOUNCE_MS);
+  }, [onViewChange]);
+
+  const map = useMapEvents({
+    moveend: () => handleMove(map),
+    zoomend: () => handleMove(map)
+  });
+
+  return null;
 }
 
 function MapView({ latitude, longitude, location, persona }) {
   const [showZones, setShowZones] = useState(true);
   const [zonePoints, setZonePoints] = useState([]);
   const [zoneLoading, setZoneLoading] = useState(false);
+  // Tracks whatever point the zones should currently be centered on -
+  // starts at the city, then follows the map as the user pans.
+  const [zoneCenter, setZoneCenter] = useState(null);
 
   useEffect(() => {
-    if (latitude == null || longitude == null || !persona || !showZones) return;
+    if (latitude != null && longitude != null) {
+      setZoneCenter({ lat: latitude, lng: longitude });
+    }
+  }, [latitude, longitude]);
+
+  useEffect(() => {
+    if (!zoneCenter || !persona || !showZones) return;
 
     let cancelled = false;
     setZoneLoading(true);
-    weatherApi.getZone(latitude, longitude, persona)
+    weatherApi.getZone(zoneCenter.lat, zoneCenter.lng, persona)
       .then((res) => {
         if (!cancelled) setZonePoints(res.data.points || []);
       })
@@ -88,7 +140,11 @@ function MapView({ latitude, longitude, location, persona }) {
       });
 
     return () => { cancelled = true; };
-  }, [latitude, longitude, persona, showZones]);
+  }, [zoneCenter, persona, showZones]);
+
+  const handleViewChange = useCallback((lat, lng) => {
+    setZoneCenter({ lat, lng });
+  }, []);
 
   if (latitude == null || longitude == null) return null;
 
@@ -119,23 +175,23 @@ function MapView({ latitude, longitude, location, persona }) {
           <Marker position={[latitude, longitude]} icon={markerIcon}>
             <Popup>{location}</Popup>
           </Marker>
-          {showZones && <ZoneOverlay points={zonePoints} />}
-          <Recenter lat={latitude} lng={longitude} />
+          {showZones && <HeatZoneLayer points={zonePoints} />}
+          <RecenterOnce lat={latitude} lng={longitude} />
+          {showZones && <ViewTracker onViewChange={handleViewChange} />}
         </MapContainer>
       </div>
       {showZones && (
-        <div className="map-legend">
-          {LEGEND_ITEMS.map((item) => (
-            <span key={item.label} className="map-legend-item">
-              <span className="map-legend-swatch" style={{ background: item.color }} />
-              {item.label}
-            </span>
-          ))}
-          {zoneLoading && <span className="map-legend-loading">Updating zones…</span>}
+        <div className="map-legend-wrap">
+          {zoneLoading && <span className="map-legend-loading">Updating zones for this area…</span>}
+          <div className="map-legend">
+            <span className="map-legend-label">Unhealthy</span>
+            <span className="map-legend-gradient" />
+            <span className="map-legend-label">Good</span>
+          </div>
         </div>
       )}
       <p className="map-zone-note">
-        Zones approximate {persona || 'persona'} suitability from nearby sampled points - not dense sensor coverage.
+        Zones approximate {persona || 'persona'} suitability from sampled points near the map's current center - not dense sensor coverage. Pan the map to sample a new area.
       </p>
     </div>
   );

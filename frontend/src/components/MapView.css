@@ -53,34 +53,36 @@
   font-family: inherit;
 }
 
-.map-legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
+.map-legend-wrap {
   margin-top: 14px;
 }
 
-.map-legend-item {
+.map-legend {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-secondary);
+  gap: 10px;
 }
 
-.map-legend-swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
+.map-legend-gradient {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #f87171, #fb923c, #a3e635, #2dd4bf);
+}
+
+.map-legend-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .map-legend-loading {
-  font-size: 12px;
+  display: block;
+  font-size: 11px;
   color: var(--text-secondary);
   opacity: 0.7;
   font-style: italic;
+  margin-bottom: 6px;
 }
 
 .map-zone-note {
