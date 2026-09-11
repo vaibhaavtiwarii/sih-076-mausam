@@ -1,21 +1,18 @@
-/* frontend/src/components/ActivitySelector.css */
 .selector {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 13px;
   margin-bottom: 20px;
-  padding: 20px;
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  border: 1px solid var(--border-subtle);
+  padding: 8px 0 2px;
   text-align: center;
 }
 
 .selector-label {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--text-primary);
 }
 
@@ -23,31 +20,48 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
+  gap: 7px 8px;
+  max-width: 980px;
 }
 
 .selector-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 1px solid var(--border-subtle);
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 15px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   background: transparent;
-  color: var(--text-secondary);
-  font-size: 14px;
+  color: #6c8298;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .selector-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.76);
+  border-color: rgba(138, 178, 199, 0.22);
   color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .selector-btn.active {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: var(--cyan);
-  color: var(--cyan);
-  font-weight: 600;
+  background: #d9f3fb;
+  border-color: rgba(14, 165, 217, 0.12);
+  color: #08a5c9;
+  font-weight: 800;
+  box-shadow: 0 5px 16px rgba(14, 165, 217, 0.07);
+}
+
+@media (max-width: 560px) {
+  .selector-buttons {
+    gap: 7px;
+  }
+
+  .selector-btn {
+    padding-inline: 12px;
+    font-size: 0.78rem;
+  }
 }

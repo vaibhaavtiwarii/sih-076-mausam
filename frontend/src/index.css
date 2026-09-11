@@ -1,5 +1,26 @@
-/* frontend/src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-main: #f3f8fc;
+  --bg-card: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.94);
+  --text-primary: #17324d;
+  --text-main: #17324d;
+  --text-secondary: #6a8197;
+  --text-muted: #8ba0b3;
+  --blue-primary: #0ea5d9;
+  --blue-soft: #eaf7fd;
+  --cyan: #10b9d8;
+  --cyan-dark: #0798b7;
+  --border: #d9e8f1;
+  --border-subtle: rgba(117, 167, 193, 0.24);
+  --shadow-sm: 0 6px 18px rgba(43, 91, 116, 0.06);
+  --shadow: 0 12px 28px rgba(43, 91, 116, 0.08);
+  --shadow-lg: 0 18px 45px rgba(43, 91, 116, 0.11);
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+}
 
 * {
   margin: 0;
@@ -7,39 +28,37 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
-  height: 100%;
+html,
+body,
+#root {
+  min-height: 100%;
   width: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #0b1124;
-  color: #f1f5f9;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(14, 165, 217, 0.08), transparent 28%),
+    linear-gradient(180deg, #edf8fd 0%, #f4f9fc 38%, #f8fbfd 100%);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* Animated background glow orbs */
 body::before {
   content: '';
   position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.15) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(45, 212, 191, 0.10) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(45, 212, 191, 0.045), transparent 24%),
+    radial-gradient(circle at 55% 90%, rgba(59, 130, 246, 0.03), transparent 26%);
   z-index: -1;
-  animation: aurora 20s ease-in-out infinite alternate;
-}
-
-@keyframes aurora {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
-  100% { transform: translate(5%, 5%) scale(1.1); opacity: 1; }
 }
 
 a {
@@ -47,24 +66,45 @@ a {
   text-decoration: none;
 }
 
-button {
-  font-family: inherit;
+button,
+input {
+  font: inherit;
 }
 
-/* Scrollbar */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(14, 165, 217, 0.17);
+}
+
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
 }
+
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 10px;
+  background: rgba(111, 155, 177, 0.08);
+  border-radius: 999px;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--cyan);
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+  background: rgba(14, 165, 217, 0.42);
+  border-radius: 999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cyan-dark);
+  background: rgba(14, 165, 217, 0.62);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

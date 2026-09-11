@@ -1,10 +1,8 @@
-/* frontend/src/components/SavedLocationsCard.css */
 .saved-locations-card {
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  padding: 24px;
   border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 22px;
   box-shadow: var(--shadow);
 }
 
@@ -12,43 +10,45 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 .saved-locations-header h3 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: #657d94;
 }
 
 .save-current-btn {
-  background: rgba(45, 212, 191, 0.1);
-  border: 1px solid var(--cyan);
-  color: var(--cyan);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 8px;
+  border: 1px solid rgba(14, 165, 217, 0.28);
+  border-radius: 999px;
+  background: #f2fbfe;
+  color: #0aa4c9;
+  font-size: 0.69rem;
+  font-weight: 800;
+  padding: 7px 11px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.18s ease;
 }
 
 .save-current-btn:hover:not(:disabled) {
-  background: rgba(45, 212, 191, 0.2);
+  background: #e7f8fd;
+  border-color: rgba(14, 165, 217, 0.44);
+  transform: translateY(-1px);
 }
 
 .save-current-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .no-saved-locations {
-  color: var(--text-secondary);
-  font-size: 14px;
-  margin: 0;
+  color: #8398aa;
+  font-size: 0.78rem;
 }
 
 .saved-locations-list {
@@ -61,31 +61,38 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(128, 164, 182, 0.16);
+  border-radius: 12px;
+  background: #f9fcfd;
 }
 
 .saved-location-name {
+  min-width: 0;
+  border: 0;
   background: none;
-  border: none;
-  color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+  color: #334b61;
+  font-size: 0.76rem;
+  font-weight: 700;
   text-align: left;
-  flex: 1;
+  cursor: pointer;
+}
+
+.saved-location-name:hover {
+  color: #0aa4c9;
 }
 
 .saved-location-remove {
+  border: 0;
   background: none;
-  border: none;
+  color: #7f93a3;
   cursor: pointer;
-  font-size: 14px;
   opacity: 0.6;
+  transition: opacity 0.18s ease, color 0.18s ease;
 }
 
 .saved-location-remove:hover {
   opacity: 1;
+  color: #0aa4c9;
 }

@@ -1,10 +1,8 @@
-/* frontend/src/components/MapView.css */
 .map-card {
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  padding: 24px;
   border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 22px;
   box-shadow: var(--shadow);
 }
 
@@ -12,24 +10,26 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .map-card-header h3 {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: #647d93;
 }
 
 .map-zone-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 0.71rem;
+  font-weight: 700;
+  color: #72899d;
   cursor: pointer;
   user-select: none;
 }
@@ -40,21 +40,19 @@
 }
 
 .map-container {
-  height: 340px;
-  border-radius: 12px;
+  height: 380px;
+  border: 1px solid rgba(122, 166, 186, 0.2);
+  border-radius: 17px;
   overflow: hidden;
-  border: 1px solid var(--border-subtle);
 }
 
-/* Leaflet injects its own z-indexed panes - keep them scoped inside the
-   rounded card instead of bleeding over the rest of the dashboard. */
 .map-container .leaflet-container {
-  background: #1a1f2e;
+  background: #edf3f7;
   font-family: inherit;
 }
 
 .map-legend-wrap {
-  margin-top: 14px;
+  margin-top: 13px;
 }
 
 .map-legend {
@@ -71,23 +69,29 @@
 }
 
 .map-legend-label {
-  font-size: 11px;
-  color: var(--text-secondary);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #7d92a4;
   white-space: nowrap;
 }
 
 .map-legend-loading {
   display: block;
-  font-size: 11px;
-  color: var(--text-secondary);
-  opacity: 0.7;
-  font-style: italic;
   margin-bottom: 6px;
+  font-size: 0.66rem;
+  color: #8ca0b2;
+  font-style: italic;
 }
 
 .map-zone-note {
-  margin: 10px 0 0 0;
-  font-size: 11px;
-  color: var(--text-secondary);
-  opacity: 0.7;
+  margin: 9px 0 0;
+  font-size: 0.65rem;
+  line-height: 1.5;
+  color: #8aa0b1;
+}
+
+@media (max-width: 720px) {
+  .map-container {
+    height: 320px;
+  }
 }

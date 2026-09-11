@@ -1,98 +1,80 @@
-/* frontend/src/components/RecommendationCard.css */
 .rec-card {
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  border-radius: 16px;
-  padding: 24px;
   border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 22px;
   box-shadow: var(--shadow);
 }
 
 .rec-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 17px;
 }
 
 .rec-activity {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 18px;
-  font-weight: 600;
+  gap: 9px;
+  min-width: 0;
 }
 
 .rec-icon {
-  font-size: 24px;
-}
-
-.rec-persona-badge {
-  font-size: 11px;
-  font-weight: 500;
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  padding: 2px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.score-circle {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: 4px solid #2dd4bf;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.score-number {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 1.55rem;
   line-height: 1;
 }
 
-.score-label {
-  font-size: 10px;
-  color: var(--text-secondary);
+.rec-persona-badge {
+  padding: 5px 10px;
+  border: 1px solid rgba(87, 149, 239, 0.18);
+  border-radius: 999px;
+  background: #edf4ff;
+  color: #5c90df;
+  font-size: 0.69rem;
+  font-weight: 800;
+}
+
+.rec-score {
+  flex: 0 0 auto;
 }
 
 .rec-window {
-  background: rgba(6, 182, 212, 0.08);
-  border: 1px solid rgba(6, 182, 212, 0.15);
-  border-radius: 12px;
-  padding: 12px 16px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  gap: 12px;
   flex-wrap: wrap;
-  gap: 8px;
+  margin-bottom: 18px;
+  padding: 13px 15px;
+  border: 1px solid rgba(14, 165, 217, 0.16);
+  border-radius: 15px;
+  background: #eefaff;
 }
 
 .window-label {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 0.73rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.04em;
+  color: #6b849a;
 }
 
 .window-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--cyan);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0aa4c9;
 }
 
 .rec-reasons h4,
 .rec-warnings h4 {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 9px;
+  font-size: 0.73rem;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+  color: #667e95;
 }
 
 .rec-reasons ul,
@@ -103,17 +85,18 @@
 
 .rec-reasons li,
 .rec-warnings li {
-  font-size: 14px;
+  font-size: 0.82rem;
+  line-height: 1.52;
   padding: 4px 0;
-  color: var(--text-primary);
+  color: #304960;
 }
 
 .rec-warnings {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(239, 68, 68, 0.2);
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(239, 68, 68, 0.14);
 }
 
 .rec-warnings li {
-  color: #fca5a5;
+  color: #a15a5e;
 }
