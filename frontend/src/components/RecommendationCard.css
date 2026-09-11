@@ -102,3 +102,48 @@
 .rec-warnings li {
   color: #b91c1c;
 }
+
+/* On wide screens the card now spans the full page width (it moved out
+   of the narrow sidebar), so lay it out as a horizontal banner instead
+   of one long vertical stack - score/badge on the left, the window and
+   reasoning filling the rest. */
+@media (min-width: 760px) {
+  .rec-card {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    column-gap: 28px;
+    row-gap: 14px;
+    align-items: start;
+  }
+
+  .rec-spotlight-badge {
+    grid-column: 1 / -1;
+  }
+
+  .rec-header {
+    grid-column: 1;
+    grid-row: 2 / span 3;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 0;
+    border-right: 1px solid var(--border-subtle);
+    padding-right: 24px;
+  }
+
+  .rec-window {
+    grid-column: 2;
+    grid-row: 2;
+    margin-bottom: 0;
+  }
+
+  .rec-reasons {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .rec-warnings {
+    grid-column: 2;
+    grid-row: 4;
+  }
+}

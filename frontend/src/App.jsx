@@ -141,12 +141,23 @@ function App() {
 
         {!loading && weather && (
           <>
-            {/* Assistant Section - the main personalization/AI touchpoint,
-                surfaced right under the persona picker instead of buried
-                at the bottom of the page. */}
+            {/* Slim AI trigger - collapses the whole assistant to one
+                small button so the real key info (the score/recommendation
+                below) is what actually occupies this space, especially
+                on mobile. */}
             <div className="assistant-section">
               <Assistant city={city} persona={persona} />
             </div>
+
+            {/* The personalization "scale" - score, best time, and the
+                why-this-window reasons - promoted to the top, full width,
+                so it's the first thing visible without scrolling past
+                the weather card and map first. */}
+            {recommendation && (
+              <div className="spotlight-section">
+                <RecommendationCard recommendation={recommendation} />
+              </div>
+            )}
 
             <div className="dashboard-grid">
               {/* Left column: Weather + Forecast + Map */}
@@ -160,11 +171,8 @@ function App() {
                 />
               </div>
 
-              {/* Right column: Recommendations + Air Quality + Alerts + Saved Locations */}
+              {/* Right column: Air Quality + Alerts + Saved Locations */}
               <div className="column secondary">
-                {recommendation && (
-                  <RecommendationCard recommendation={recommendation} />
-                )}
                 {weather?.airQuality && (
                   <AirQualityCard airQuality={weather.airQuality} />
                 )}

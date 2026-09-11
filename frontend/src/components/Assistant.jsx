@@ -39,13 +39,7 @@ function Assistant({ city, persona }) {
     ask();
   };
 
-  const openWithPrompt = (text) => {
-    setChatOpen(true);
-    ask(text);
-  };
-
-  // Escape key closes the popup, and the input auto-focuses on open -
-  // small touches so it feels like a real chat window, not just a div.
+  // Escape closes the popup, and the input auto-focuses on open.
   useEffect(() => {
     if (!chatOpen) return;
     const onKey = (e) => { if (e.key === 'Escape') setChatOpen(false); };
@@ -59,38 +53,16 @@ function Assistant({ city, persona }) {
 
   return (
     <>
-      {/* Compact strip: this is what stays on the page at all times - the
-          personalization is visible immediately, without the full chat
-          UI taking up space until someone actually wants to type. */}
-      <div className="assistant-compact">
-        <div className="assistant-header">
-          <h3>🤖 Ask MAUSAM AI</h3>
-          <span className="spotlight-badge">✨ Personalized for you</span>
-        </div>
-        <p className="assistant-subtitle">
-          Answers factor in your {persona.toLowerCase()} persona and {city}'s live weather - not a generic forecast.
-        </p>
+      {/* The whole feature collapses down to this one slim, responsive
+          button on the page - no reserved block of vertical space until
+          someone actually wants to chat. Everything else (quick prompts,
+          input, answer) lives in the popup below. */}
+      <button className="assistant-trigger" onClick={() => setChatOpen(true)}>
+        <span className="assistant-trigger-icon">🤖</span>
+        <span className="assistant-trigger-text">Ask MAUSAM AI</span>
+        <span className="spotlight-badge assistant-trigger-badge">✨ Personalized</span>
+      </button>
 
-        <div className="quick-prompts">
-          {QUICK_PROMPTS.map(({ icon, text }, idx) => (
-            <button key={idx} className="quick-prompt-btn" onClick={() => openWithPrompt(text)}>
-              <span>{icon}</span> {text}
-            </button>
-          ))}
-
-          <button
-            className="assistant-fab"
-            onClick={() => setChatOpen(true)}
-            aria-label="Open Mausam AI chat"
-            title="Ask your own question"
-          >
-            🤖<span className="assistant-fab-plus">+</span>
-          </button>
-        </div>
-      </div>
-
-      {/* The actual chat window - only mounted once the icon (or a quick
-          prompt) is clicked. */}
       {chatOpen && (
         <div className="assistant-overlay" onClick={() => setChatOpen(false)}>
           <div className="assistant-modal" onClick={(e) => e.stopPropagation()}>
@@ -102,7 +74,11 @@ function Assistant({ city, persona }) {
               <button className="assistant-close" onClick={() => setChatOpen(false)} aria-label="Close chat">✕</button>
             </div>
 
-            <div className="quick-prompts quick-prompts-modal">
+            <p className="assistant-modal-intro">
+              Answers factor in your {persona.toLowerCase()} persona and {city}'s live weather - not a generic forecast.
+            </p>
+
+            <div className="quick-prompts">
               {QUICK_PROMPTS.map(({ icon, text }, idx) => (
                 <button key={idx} className="quick-prompt-btn" onClick={() => ask(text)}>
                   <span>{icon}</span> {text}
