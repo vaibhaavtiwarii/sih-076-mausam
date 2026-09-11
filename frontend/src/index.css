@@ -1,26 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-
-:root {
-  --bg-main: #f3f8fc;
-  --bg-card: #ffffff;
-  --card-bg: rgba(255, 255, 255, 0.94);
-  --text-primary: #17324d;
-  --text-main: #17324d;
-  --text-secondary: #6a8197;
-  --text-muted: #8ba0b3;
-  --blue-primary: #0ea5d9;
-  --blue-soft: #eaf7fd;
-  --cyan: #10b9d8;
-  --cyan-dark: #0798b7;
-  --border: #d9e8f1;
-  --border-subtle: rgba(117, 167, 193, 0.24);
-  --shadow-sm: 0 6px 18px rgba(43, 91, 116, 0.06);
-  --shadow: 0 12px 28px rgba(43, 91, 116, 0.08);
-  --shadow-lg: 0 18px 45px rgba(43, 91, 116, 0.11);
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
-}
+/* frontend/src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 * {
   margin: 0;
@@ -28,37 +7,41 @@
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
+html, body, #root {
+  height: 100%;
   width: 100%;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background:
-    radial-gradient(circle at 8% 0%, rgba(14, 165, 217, 0.08), transparent 28%),
-    linear-gradient(180deg, #edf8fd 0%, #f4f9fc 38%, #f8fbfd 100%);
-  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #eef6fb;
+  color: #10263a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
+/* Soft, airy glow orbs - a light-theme "sky" backdrop instead of the old
+   dark aurora, tuned to sit behind the cards without fighting them. */
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
-  pointer-events: none;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
   background:
-    radial-gradient(circle at 92% 8%, rgba(45, 212, 191, 0.045), transparent 24%),
-    radial-gradient(circle at 55% 90%, rgba(59, 130, 246, 0.03), transparent 26%);
+    radial-gradient(ellipse at 15% 20%, rgba(56, 189, 248, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(129, 140, 248, 0.10) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 85%, rgba(45, 212, 191, 0.12) 0%, transparent 55%);
   z-index: -1;
+  animation: aurora 22s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes aurora {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.75; }
+  100% { transform: translate(4%, 4%) scale(1.08); opacity: 1; }
 }
 
 a {
@@ -66,45 +49,24 @@ a {
   text-decoration: none;
 }
 
-button,
-input {
-  font: inherit;
-}
-
 button {
-  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
 }
 
-::selection {
-  background: rgba(14, 165, 217, 0.17);
-}
-
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: rgba(111, 155, 177, 0.08);
-  border-radius: 999px;
+  background: rgba(14, 116, 144, 0.06);
+  border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: rgba(14, 165, 217, 0.42);
-  border-radius: 999px;
+  background: var(--cyan, #06b6d4);
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(14, 165, 217, 0.62);
-}
-
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: var(--cyan-dark, #0891b2);
 }

@@ -182,28 +182,41 @@ async function buildPersonaInsights(weatherData, persona) {
         persona,
         airQuality: weatherData.airQuality,
         uv: weatherData.uv,
-        uvAdvice: weatherData.uv >= 6 ? 'High UV - wear sunscreen and limit midday sun exposure.' : 'UV levels are manageable today.',
+        uvAdvice: weatherData.uv >= 6
+          ? `UV index of ${weatherData.uv} is above the level-6 "high exposure" threshold - wear sunscreen and limit midday sun.`
+          : `UV index of ${weatherData.uv} is below the level-6 threshold, so exposure is manageable today.`,
         humidity: weatherData.humidity,
         humidityAdvice: weatherData.humidity >= 70
-          ? 'High humidity - may aggravate asthma or trigger skin irritation for sensitive users.'
+          ? `Humidity of ${weatherData.humidity}% is above the 70% comfort ceiling - may aggravate asthma or trigger skin irritation for sensitive users.`
           : weatherData.humidity <= 30
-            ? 'Low humidity - may cause dry skin/airways, consider a moisturizer or humidifier.'
-            : 'Humidity is in a comfortable range.',
+            ? `Humidity of ${weatherData.humidity}% is below the 30% comfort floor - may cause dry skin/airways, consider a moisturizer or humidifier.`
+            : `Humidity of ${weatherData.humidity}% sits inside the 30–70% comfortable range.`,
         pollen: pollenEstimate(weatherData)
       };
     }
 
     case 'Fitness': {
       const bestWindow = findBestWindow(weatherData.hourly, 'Fitness');
-      const heatHour = weatherData.hourly.slice(0, 12).find(h => h.temperature >= 35);
+      const HEAT_THRESHOLD_C = 35;
+      const next12h = weatherData.hourly.slice(0, 12);
+      const heatHour = next12h.find(h => h.temperature >= HEAT_THRESHOLD_C);
+      const peakTemp = next12h.length ? Math.max(...next12h.map(h => h.temperature)) : null;
+
+      // Always state the number the decision was based on - not just the
+      // verdict - so "no heat concerns" reads as a checked fact instead of
+      // a black-box default.
+      const heatAlert = heatHour
+        ? `Heat risk: temperature reaches ${heatHour.temperature}°C in the next 12 hours, above the ${HEAT_THRESHOLD_C}°C safe-exercise threshold. Avoid intense exercise during that window.`
+        : peakTemp != null
+          ? `No heat concerns: peak temperature in the next 12 hours is ${peakTemp}°C, below the ${HEAT_THRESHOLD_C}°C threshold used for this persona.`
+          : null;
+
       return {
         persona,
         sunrise: weatherData.sunrise,
         sunset: weatherData.sunset,
         bestWindow,
-        heatAlert: heatHour
-          ? `Temperatures reaching ${heatHour.temperature}°C - avoid intense exercise during peak heat.`
-          : null
+        heatAlert
       };
     }
 

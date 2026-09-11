@@ -30,19 +30,23 @@ function Assistant({ city, persona }) {
   };
 
   const quickPrompts = [
-    'Can I go running at 5 PM?',
-    'Will rain affect my event?',
-    'What should I prepare for tomorrow?'
+    { icon: '🏃', text: 'Can I go running at 5 PM?' },
+    { icon: '🌧️', text: 'Will rain affect my event?' },
+    { icon: '🎒', text: 'What should I prepare for tomorrow?' }
   ];
 
   return (
     <div className="assistant">
       <div className="assistant-header">
         <h3>🤖 Ask MAUSAM AI</h3>
+        <span className="spotlight-badge">✨ Personalized for you</span>
       </div>
+      <p className="assistant-subtitle">
+        Answers factor in your {persona.toLowerCase()} persona and {city}'s live weather - not a generic forecast.
+      </p>
 
       <div className="quick-prompts">
-        {quickPrompts.map((prompt, idx) => (
+        {quickPrompts.map(({ icon, text: prompt }, idx) => (
           <button
             key={idx}
             className="quick-prompt-btn"
@@ -55,7 +59,7 @@ function Assistant({ city, persona }) {
               }, 100);
             }}
           >
-            {prompt}
+            <span>{icon}</span> {prompt}
           </button>
         ))}
       </div>

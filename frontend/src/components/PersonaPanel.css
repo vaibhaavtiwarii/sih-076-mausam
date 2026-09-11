@@ -1,24 +1,24 @@
+/* frontend/src/components/PersonaPanel.css */
 .persona-panel {
-  margin-top: 6px;
-  padding: 22px;
+  margin-top: 20px;
+  padding: 20px;
   background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
 }
 
 .persona-panel-title {
-  margin: 0 0 16px;
-  font-size: 0.98rem;
-  font-weight: 800;
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
 }
 
 .persona-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 11px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
 }
 
 .persona-tile {
@@ -26,29 +26,28 @@
   flex-direction: column;
   gap: 4px;
   padding: 14px;
-  border: 1px solid rgba(128, 164, 182, 0.16);
-  border-radius: 14px;
-  background: #f9fcfd;
+  border-radius: 12px;
+  background: var(--tile-bg);
+  border: 1px solid var(--border-subtle);
 }
 
 .persona-tile strong {
-  font-size: 1.02rem;
-  font-weight: 800;
+  font-size: 18px;
   color: var(--text-primary);
 }
 
 .persona-tile-label {
-  font-size: 0.66rem;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #8096a8;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
 }
 
 .persona-tile-sub {
-  font-size: 0.72rem;
-  line-height: 1.48;
-  color: #71879a;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
 }
 
 .persona-tile-wide {
@@ -56,20 +55,20 @@
 }
 
 .persona-tile-warning {
-  border-color: rgba(239, 111, 111, 0.2);
-  background: #fff8f8;
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.08);
 }
 
 .persona-empty {
-  color: #8196a8;
-  font-size: 0.76rem;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
 .persona-list {
-  margin: 4px 0 0;
+  margin: 4px 0 0 0;
   padding-left: 18px;
-  color: #425a70;
-  font-size: 0.74rem;
+  font-size: 14px;
+  color: var(--text-primary);
 }
 
 .persona-list li {
@@ -79,7 +78,7 @@
 .saved-destinations {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 8px;
   margin: 6px 0;
 }
 
@@ -87,67 +86,65 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 9px;
-  border: 1px solid rgba(14, 165, 217, 0.14);
-  border-radius: 999px;
-  background: #effafe;
-  color: #0b9cbd;
-  font-size: 0.7rem;
-  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--cyan);
+  font-size: 13px;
 }
 
 .saved-destination-chip button {
-  padding: 0;
-  border: none;
   background: none;
+  border: none;
   color: inherit;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 15px;
   line-height: 1;
+  padding: 0;
 }
 
 .btn-save-destination {
   align-self: flex-start;
   margin-top: 6px;
-  padding: 7px 11px;
-  border: 1px solid rgba(14, 165, 217, 0.22);
-  border-radius: 999px;
-  background: #f7fcfe;
-  color: #0d9fbe;
-  font-size: 0.69rem;
-  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.2s;
 }
 
 .btn-save-destination:hover {
-  background: #ecfafe;
-  border-color: rgba(14, 165, 217, 0.38);
+  background: rgba(6, 182, 212, 0.1);
+  border-color: var(--cyan);
+  color: var(--cyan);
 }
 
 .event-forecast-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 5px;
+  gap: 12px;
+  margin-top: 6px;
 }
 
 .event-forecast-day {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--tile-bg);
+  border: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-secondary);
   min-width: 110px;
-  padding: 9px 11px;
-  border: 1px solid rgba(128, 164, 182, 0.16);
-  border-radius: 12px;
-  background: #f9fcfd;
-  color: #71879a;
-  font-size: 0.68rem;
 }
 
 .event-forecast-day strong {
-  font-size: 0.69rem;
-  color: #385168;
+  font-size: 13px;
+  color: var(--text-primary);
 }
 
 @media (max-width: 640px) {
