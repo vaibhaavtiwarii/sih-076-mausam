@@ -20,14 +20,14 @@ const markerIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Red (bad) -> orange -> yellow-green -> teal (good), keyed 0-1 as
-// leaflet.heat expects. This turns a persona score into a smooth blended
-// gradient instead of discrete colored circles.
+// Straightforward stoplight gradient - red (bad) -> yellow (mid) -> green
+// (good), keyed 0-1 as leaflet.heat expects. Kept to three stops so the
+// red/green read stays obvious at a glance instead of drifting into
+// ambiguous teal/orange tones that don't map cleanly to "good" or "bad".
 const ZONE_GRADIENT = {
-  0.0: '#f87171',
-  0.35: '#fb923c',
-  0.6: '#a3e635',
-  1.0: '#2dd4bf'
+  0.0: '#ef4444',
+  0.5: '#facc15',
+  1.0: '#22c55e'
 };
 
 const DEBOUNCE_MS = 700; // wait for panning/zooming to settle before refetching
@@ -58,11 +58,11 @@ function HeatZoneLayer({ points }) {
 
     if (!layerRef.current) {
       layerRef.current = L.heatLayer(latLngs, {
-        radius: 70,
-        blur: 55,
+        radius: 50,
+        blur: 35,
         maxZoom: 14,
         max: 1.0,
-        minOpacity: 0.35,
+        minOpacity: 0.4,
         gradient: ZONE_GRADIENT
       }).addTo(map);
     } else {

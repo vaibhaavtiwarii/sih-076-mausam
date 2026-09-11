@@ -60,6 +60,35 @@ function categorize(score) {
   return 'Unhealthy';
 }
 
+// Great-circle distance in km between two lat/lng pairs (haversine).
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// There's no free land/water mask to check a grid point against directly.
+// But WeatherAPI always snaps a query to its nearest ACTUAL station and
+// returns that station's real coordinates in the response - on land, that's
+// normally within a few km. Out in open water (a harbor, a bay, the sea),
+// there's no station anywhere nearby, so it snaps to whatever coastal
+// station is closest, which can be 20-50km+ away. That gap is a cheap,
+// already-available signal that a point isn't really representative of
+// where it claims to be, so we use it to drop obvious water points instead
+// of painting a confident score over the ocean.
+const STATION_DISTANCE_THRESHOLD_KM = 20;
+
+function isRepresentative(point, weatherData) {
+  if (weatherData.latitude == null || weatherData.longitude == null) return true;
+  const gap = distanceKm(point.lat, point.lng, weatherData.latitude, weatherData.longitude);
+  return gap <= STATION_DISTANCE_THRESHOLD_KM;
+}
+
 router.get('/', async (req, res) => {
   try {
     const { lat, lng, persona } = req.query;
@@ -78,6 +107,7 @@ router.get('/', async (req, res) => {
           // the exact same fetch + 10-minute cache as the main weather
           // route, just keyed by coordinates instead of a city name.
           const weatherData = await getWeatherForCity(`${point.lat},${point.lng}`);
+          if (!isRepresentative(point, weatherData)) return null; // likely open water - no real reading here
           const { score } = scoreHour(weatherData, persona);
           return { lat: point.lat, lng: point.lng, score, category: categorize(score) };
         } catch (pointErr) {
