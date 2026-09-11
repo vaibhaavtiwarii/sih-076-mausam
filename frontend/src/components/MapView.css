@@ -65,7 +65,7 @@
   flex: 1;
   height: 8px;
   border-radius: 999px;
-  background: linear-gradient(to right, #f87171, #fb923c, #a3e635, #2dd4bf);
+  background: linear-gradient(to right, #ef4444, #facc15, #22c55e);
 }
 
 .map-legend-label {
