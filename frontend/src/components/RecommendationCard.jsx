@@ -6,11 +6,22 @@ import './RecommendationCard.css';
 function RecommendationCard({ recommendation }) {
   if (!recommendation) return null;
 
-  const { persona, score, bestWindow, reasons, warnings } = recommendation;
+  const { persona, score, bestWindow, reasons, warnings, locationMismatch } = recommendation;
 
   return (
     <div className="rec-card">
       <span className="spotlight-badge rec-spotlight-badge">✨ Personalized for you</span>
+
+      {locationMismatch && (
+        <div className="rec-mismatch-banner">
+          <span className="rec-mismatch-icon">🚫</span>
+          <div>
+            <strong>This score may not be meaningful here.</strong>
+            <p>{locationMismatch}</p>
+          </div>
+        </div>
+      )}
+
       <div className="rec-header">
         <div className="rec-activity">
           <span className="rec-icon">🎯</span>

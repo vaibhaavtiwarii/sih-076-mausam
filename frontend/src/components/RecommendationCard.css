@@ -103,6 +103,39 @@
   color: #b91c1c;
 }
 
+/* A location/persona mismatch (Surfer in Delhi, etc.) is a different kind
+   of problem than "conditions aren't ideal" - styled as a solid, impossible
+   -to-miss banner rather than a bullet buried lower in the card. */
+.rec-mismatch-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  color: #991b1b;
+}
+
+.rec-mismatch-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.rec-mismatch-banner strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+
+.rec-mismatch-banner p {
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+  color: #7f1d1d;
+}
+
 /* On wide screens the card now spans the full page width (it moved out
    of the narrow sidebar), so lay it out as a horizontal banner instead
    of one long vertical stack - score/badge on the left, the window and
@@ -117,6 +150,10 @@
   }
 
   .rec-spotlight-badge {
+    grid-column: 1 / -1;
+  }
+
+  .rec-mismatch-banner {
     grid-column: 1 / -1;
   }
 
