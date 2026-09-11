@@ -53,14 +53,17 @@ function Assistant({ city, persona }) {
 
   return (
     <>
-      {/* The whole feature collapses down to this one slim, responsive
-          button on the page - no reserved block of vertical space until
-          someone actually wants to chat. Everything else (quick prompts,
-          input, answer) lives in the popup below. */}
-      <button className="assistant-trigger" onClick={() => setChatOpen(true)}>
-        <span className="assistant-trigger-icon">🤖</span>
-        <span className="assistant-trigger-text">Ask MAUSAM AI</span>
-        <span className="spotlight-badge assistant-trigger-badge">✨ Personalized</span>
+      {/* Just a small icon now, sized to sit in the header row next to
+          "Change location" - no reserved block on the page at all.
+          Everything (chips, input, answer) lives in the popup. */}
+      <button
+        className="assistant-icon-btn"
+        onClick={() => setChatOpen(true)}
+        aria-label="Ask MAUSAM AI - your personalized weather assistant"
+        title="Ask MAUSAM AI"
+      >
+        <span className="assistant-icon-emoji">🤖</span>
+        <span className="assistant-icon-spark">✨</span>
       </button>
 
       {chatOpen && (

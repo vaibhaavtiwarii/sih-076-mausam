@@ -117,6 +117,7 @@ function App() {
             {lastUpdated && (
               <span className="last-updated">Updated: {lastUpdated}</span>
             )}
+            <Assistant city={city} persona={persona} />
             <button
               type="button"
               className="change-location-btn"
@@ -141,14 +142,6 @@ function App() {
 
         {!loading && weather && (
           <>
-            {/* Slim AI trigger - collapses the whole assistant to one
-                small button so the real key info (the score/recommendation
-                below) is what actually occupies this space, especially
-                on mobile. */}
-            <div className="assistant-section">
-              <Assistant city={city} persona={persona} />
-            </div>
-
             {/* The personalization "scale" - score, best time, and the
                 why-this-window reasons - promoted to the top, full width,
                 so it's the first thing visible without scrolling past

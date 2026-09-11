@@ -1,58 +1,47 @@
 /* frontend/src/components/Assistant.css */
 
 /* ---------------------------------------------------------------- */
-/* Slim trigger - this is ALL that renders on the page. One line on   */
-/* desktop, wraps cleanly on narrow phones, and never pushes the      */
-/* score/weather content further down the screen.                    */
+/* Icon-only trigger - lives in the header row next to "Change        */
+/* location", sized to match it, so the whole feature costs zero      */
+/* vertical space on the page itself.                                 */
 /* ---------------------------------------------------------------- */
-.assistant-trigger {
-  width: 100%;
-  display: flex;
+.assistant-icon-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: var(--card-bg);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  padding: 12px 20px;
-  cursor: pointer;
-  box-shadow: var(--shadow-glow);
-  font-family: var(--font-body);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.20);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.assistant-trigger:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.28), 0 14px 32px rgba(56, 189, 248, 0.28);
+.assistant-icon-btn:hover {
+  transform: translateY(-1px) scale(1.05);
+  background: var(--gradient-spotlight);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
 }
 
-.assistant-trigger-icon {
-  font-size: 18px;
+.assistant-icon-btn:hover .assistant-icon-emoji {
+  filter: brightness(0) invert(1);
+}
+
+.assistant-icon-emoji {
+  font-size: 17px;
   line-height: 1;
 }
 
-.assistant-trigger-text {
-  font-weight: 700;
-  font-size: 14.5px;
-  color: var(--text-primary);
-}
-
-.assistant-trigger-badge {
-  margin-left: 2px;
-}
-
-@media (max-width: 480px) {
-  .assistant-trigger {
-    padding: 11px 14px;
-    gap: 8px;
-  }
-  .assistant-trigger-text {
-    font-size: 13px;
-  }
-  .assistant-trigger-badge {
-    font-size: 9.5px;
-    padding: 3px 9px;
-  }
+.assistant-icon-spark {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  font-size: 11px;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9));
 }
 
 /* ---------------------------------------------------------------- */
@@ -64,9 +53,9 @@
   background: rgba(15, 37, 54, 0.35);
   backdrop-filter: blur(3px);
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: flex-end;
-  padding: 24px;
+  padding: 84px 24px 24px;
   z-index: 1000;
   animation: assistant-fade-in 0.15s ease;
 }
@@ -90,7 +79,7 @@
 }
 
 @keyframes assistant-slide-up {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(-12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
