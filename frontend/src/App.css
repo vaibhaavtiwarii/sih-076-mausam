@@ -129,6 +129,19 @@
   transform: translateY(-1px);
 }
 
+.recommendation-hero {
+  margin-bottom: 20px;
+}
+
+.recommendation-hero-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cyan-dark, #0891b2);
+  margin: 0 0 10px 2px;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.58fr) minmax(340px, 0.95fr);

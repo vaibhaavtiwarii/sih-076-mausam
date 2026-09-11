@@ -141,6 +141,17 @@ function App() {
 
         {!loading && weather && (
           <>
+            {/* Personalization is the whole point of MAUSAM AI, so the
+                recommendation goes first and full-width - not squeezed into
+                a sidebar column where it used to render below the weather
+                card and map on any screen under 900px wide. */}
+            {recommendation && (
+              <section className="recommendation-hero">
+                <p className="recommendation-hero-eyebrow">Personalized for you</p>
+                <RecommendationCard recommendation={recommendation} />
+              </section>
+            )}
+
             <div className="dashboard-grid">
               {/* Left column: Weather + Forecast + Map */}
               <div className="column primary">
@@ -153,11 +164,8 @@ function App() {
                 />
               </div>
 
-              {/* Right column: Recommendations + Air Quality + Alerts + Saved Locations */}
+              {/* Right column: Air Quality + Alerts + Saved Locations */}
               <div className="column secondary">
-                {recommendation && (
-                  <RecommendationCard recommendation={recommendation} />
-                )}
                 {weather?.airQuality && (
                   <AirQualityCard airQuality={weather.airQuality} />
                 )}

@@ -24,7 +24,7 @@ function ScoreRing({ score, size = 64, strokeWidth = 5 }) {
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255, 255, 255, 0.08)"
+          stroke="rgba(15, 23, 42, 0.08)"
           strokeWidth={strokeWidth}
         />
         <circle

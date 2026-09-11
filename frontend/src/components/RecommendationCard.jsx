@@ -10,40 +10,43 @@ function RecommendationCard({ recommendation }) {
 
   return (
     <div className="rec-card">
-      <div className="rec-header">
-        <div className="rec-activity">
-          <span className="rec-icon">🎯</span>
-          <span className="rec-persona-badge">{persona}</span>
+      {/* Score + persona live in their own block so they read as one
+          glanceable answer on the left, with the full explanation on the
+          right - this only pairs side-by-side on wider screens; see the
+          @media rule in RecommendationCard.css for the mobile stack. */}
+      <div className="rec-score-block">
+        <ScoreRing score={score} size={96} strokeWidth={7} />
+        <span className="rec-persona-badge">
+          <span className="rec-icon">🎯</span> {persona}
+        </span>
+      </div>
+
+      <div className="rec-details">
+        <div className="rec-window">
+          <span className="window-label">⏱ Best Time</span>
+          <span className="window-value">{bestWindow}</span>
         </div>
-        <div className="rec-score">
-          <ScoreRing score={score} size={64} strokeWidth={5} />
-        </div>
-      </div>
 
-      <div className="rec-window">
-        <span className="window-label">⏱ Best Time</span>
-        <span className="window-value">{bestWindow}</span>
-      </div>
-
-      <div className="rec-reasons">
-        <h4>Why this window?</h4>
-        <ul>
-          {reasons && reasons.map((reason, idx) => (
-            <li key={idx}>✅ {reason}</li>
-          ))}
-        </ul>
-      </div>
-
-      {warnings && warnings.length > 0 && (
-        <div className="rec-warnings">
-          <h4>⚠️ Warnings</h4>
+        <div className="rec-reasons">
+          <h4>Why this window?</h4>
           <ul>
-            {warnings.map((warn, idx) => (
-              <li key={idx}>⚠️ {warn}</li>
+            {reasons && reasons.map((reason, idx) => (
+              <li key={idx}>✅ {reason}</li>
             ))}
           </ul>
         </div>
-      )}
+
+        {warnings && warnings.length > 0 && (
+          <div className="rec-warnings">
+            <h4>⚠️ Warnings</h4>
+            <ul>
+              {warnings.map((warn, idx) => (
+                <li key={idx}>⚠️ {warn}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
