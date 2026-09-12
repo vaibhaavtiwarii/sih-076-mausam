@@ -29,6 +29,7 @@ function App() {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [mapOpen, setMapOpen] = useState(false);
+  const [alertPopupOpen, setAlertPopupOpen] = useState(false);
 
   const fetchAllData = async (cityName, pers) => {
     setLoading(true);
@@ -49,6 +50,14 @@ function App() {
       setAlerts(alertRes.data.alerts);
       setInsights(personaRes.data.insights);
       setLastUpdated(new Date().toLocaleTimeString());
+
+      // Surface alerts as a popup the moment they load, instead of making
+      // the user notice the Smart Alerts card tucked in the sidebar. The
+      // card itself still renders as always - this is just an extra,
+      // dismissible heads-up on top of it.
+      if (alertRes.data.alerts && alertRes.data.alerts.length > 0) {
+        setAlertPopupOpen(true);
+      }
     } catch (err) {
       console.error('Error fetching data:', err);
       setError(err.response?.data?.error || 'Failed to fetch weather data. Please try again.');
@@ -72,6 +81,14 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [mapOpen]);
 
+  // Same Escape-to-close behavior for the alert popup
+  useEffect(() => {
+    if (!alertPopupOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setAlertPopupOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [alertPopupOpen]);
+
   // Called from the landing screen once a city has been chosen
   const handleLocationConfirmed = (selectedCity) => {
     setCity(selectedCity);
@@ -85,6 +102,7 @@ function App() {
     setRecommendation(null);
     setAlerts([]);
     setInsights(null);
+    setAlertPopupOpen(false);
     setStage('landing');
   };
 
@@ -209,6 +227,47 @@ function App() {
                     location={weather?.location}
                     persona={persona}
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Alert popup - fires once when alerts load for this
+                city/persona. Dismissing it just closes the popup; the
+                Smart Alerts card in the sidebar keeps showing the same
+                alerts as always, popup or not. */}
+            {alertPopupOpen && alerts.length > 0 && (
+              <div className="alert-popup-overlay" onClick={() => setAlertPopupOpen(false)}>
+                <div className="alert-popup" onClick={(e) => e.stopPropagation()}>
+                  <div className="alert-popup-header">
+                    <h3>🔔 Smart Alerts</h3>
+                    <button
+                      type="button"
+                      className="alert-popup-close"
+                      onClick={() => setAlertPopupOpen(false)}
+                      aria-label="Dismiss alerts"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="alert-items">
+                    {alerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className={`alert-item ${
+                          alert.priority === 'High' ? 'priority-high'
+                            : alert.priority === 'Medium' ? 'priority-medium'
+                            : 'priority-low'
+                        }`}
+                      >
+                        <div className="alert-title">{alert.title}</div>
+                        <div className="alert-message">{alert.message}</div>
+                        <div className="alert-priority">{alert.priority} Priority</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button type="button" className="alert-popup-dismiss" onClick={() => setAlertPopupOpen(false)}>
+                    Dismiss
+                  </button>
                 </div>
               </div>
             )}

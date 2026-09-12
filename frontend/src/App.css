@@ -462,3 +462,70 @@ h1, h2, h3, h4 {
     border-radius: 0;
   }
 }
+
+/* ---------------------------------------------------------------- */
+/* Alert popup - fires once when Smart Alerts load. Reuses the exact */
+/* .alert-item/.alert-title/etc classes from AlertList.css so the    */
+/* popup and the sidebar card always look identical.                 */
+/* ---------------------------------------------------------------- */
+.alert-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 37, 54, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1100;
+  animation: assistant-fade-in 0.15s ease;
+}
+
+.alert-popup {
+  width: min(460px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 20px;
+}
+
+.alert-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.alert-popup-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.alert-popup-close {
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  line-height: 1;
+  padding: 4px;
+}
+
+.alert-popup-dismiss {
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px;
+  border: none;
+  border-radius: 10px;
+  background: var(--gradient-spotlight);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
