@@ -27,6 +27,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [mapOpen, setMapOpen] = useState(false);
 
   const fetchAllData = async (cityName, pers) => {
     setLoading(true);
@@ -61,6 +62,14 @@ function App() {
       fetchAllData(city, persona);
     }
   }, [stage, city, persona]);
+
+  // Escape closes the map modal, same as the assistant popup
+  useEffect(() => {
+    if (!mapOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMapOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mapOpen]);
 
   // Called from the landing screen once a city has been chosen
   const handleLocationConfirmed = (selectedCity) => {
@@ -153,15 +162,10 @@ function App() {
             )}
 
             <div className="dashboard-grid">
-              {/* Left column: Weather + Forecast + Map */}
+              {/* Left column: Weather + Forecast (map now opens from a
+                  button inside the card instead of always rendering here) */}
               <div className="column primary">
-                <WeatherCard weather={weather} />
-                <MapView
-                  latitude={weather?.latitude}
-                  longitude={weather?.longitude}
-                  location={weather?.location}
-                  persona={persona}
-                />
+                <WeatherCard weather={weather} onOpenMap={() => setMapOpen(true)} />
               </div>
 
               {/* Right column: Air Quality + Alerts + Saved Locations */}
@@ -176,6 +180,34 @@ function App() {
 
             {/* Persona-specific panel (Wellness/Fitness/Surfer/Traveler/etc.) */}
             <PersonaPanel persona={persona} insights={insights} city={city} />
+
+            {/* Interactive Map - only mounted while open, so it isn't
+                fetching/rendering tiles in the background the rest of the
+                time. Closing via the backdrop, the ✕, or Escape all just
+                flip mapOpen back to false. */}
+            {mapOpen && (
+              <div className="map-modal-overlay" onClick={() => setMapOpen(false)}>
+                <div className="map-modal" onClick={(e) => e.stopPropagation()}>
+                  <div className="map-modal-header">
+                    <h3>🗺️ Interactive Map · {weather?.location}</h3>
+                    <button
+                      type="button"
+                      className="map-modal-close"
+                      onClick={() => setMapOpen(false)}
+                      aria-label="Close map"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <MapView
+                    latitude={weather?.latitude}
+                    longitude={weather?.longitude}
+                    location={weather?.location}
+                    persona={persona}
+                  />
+                </div>
+              </div>
+            )}
           </>
         )}
 

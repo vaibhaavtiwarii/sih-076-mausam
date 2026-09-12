@@ -57,11 +57,20 @@ async function getWithRetry(url, retries = 3) {
   }
 }
 
+// One decimal place instead of a whole number - Math.round() was making
+// every temperature look like a round number (28°, 32°) which reads as
+// less precise/live than it actually is. toFixed(1) then parseFloat strips
+// any trailing zero weirdness (e.g. "28.0" -> 28) while keeping real
+// decimals (28.4) intact.
+function roundTo1(value) {
+  return Math.round(value * 10) / 10;
+}
+
 function mapHour(h) {
   return {
     time: h.time.replace(' ', 'T'),
-    temperature: Math.round(h.temp_c),
-    apparentTemperature: Math.round(h.feelslike_c),
+    temperature: roundTo1(h.temp_c),
+    apparentTemperature: roundTo1(h.feelslike_c),
     humidity: h.humidity,
     rain: h.chance_of_rain,
     wind: Math.round(h.wind_kph),
@@ -152,8 +161,8 @@ async function fetchFromWeatherApi(city) {
   // 3-day daily summary (for Event Planners, Agriculture frost/rainfall, etc.)
   const daily = days.map(d => ({
     date: d.date,
-    maxTemp: Math.round(d.day.maxtemp_c),
-    minTemp: Math.round(d.day.mintemp_c),
+    maxTemp: roundTo1(d.day.maxtemp_c),
+    minTemp: roundTo1(d.day.mintemp_c),
     avgHumidity: Math.round(d.day.avghumidity),
     totalPrecipMm: d.day.totalprecip_mm,
     chanceOfRain: d.day.daily_chance_of_rain,
@@ -188,9 +197,9 @@ async function fetchFromWeatherApi(city) {
     location: locationString,
     latitude: data.location.lat,
     longitude: data.location.lon,
-    temperature: Math.round(data.current.temp_c),
+    temperature: roundTo1(data.current.temp_c),
     condition: data.current.condition?.text || 'Unknown',
-    feelsLike: Math.round(data.current.feelslike_c),
+    feelsLike: roundTo1(data.current.feelslike_c),
     humidity: data.current.humidity,
     wind: Math.round(data.current.wind_kph),
     uv: Math.round((data.current.uv || 0) * 10) / 10,

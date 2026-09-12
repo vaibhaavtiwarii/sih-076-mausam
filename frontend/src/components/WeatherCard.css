@@ -166,6 +166,40 @@
   color: #2a8fca;
 }
 
+/* ---------------------------------------------------------------- */
+/* Interactive Map trigger row - replaces the always-rendered map    */
+/* ---------------------------------------------------------------- */
+.map-link-row {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f1f5f9;
+  border: 1px solid rgba(14, 165, 233, 0.18);
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.map-link-row:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.map-link-label {
+  font-weight: 600;
+  color: #0f2536;
+  font-size: 0.95rem;
+}
+
+.map-link-arrow {
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
 @media (max-width: 720px) {
   .main-weather-card {
     padding: 22px 16px 18px;

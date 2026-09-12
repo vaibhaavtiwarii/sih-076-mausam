@@ -3,7 +3,7 @@ import React from 'react';
 import { WiHumidity, WiStrongWind, WiDaySunny, WiRain } from 'react-icons/wi';
 import './WeatherCard.css';
 
-function WeatherCard({ weather }) {
+function WeatherCard({ weather, onOpenMap }) {
   // Basic safety check in case weather is loading
   if (!weather) return null;
 
@@ -19,6 +19,16 @@ function WeatherCard({ weather }) {
           <p className="feels-like">Feels like {weather.feelsLike}°C</p>
         </div>
       </div>
+
+      {/* Map now lives behind this row instead of always being rendered
+          full-size below the card - saves a screen's worth of scrolling
+          and matches the "tap to expand" pattern most weather apps use. */}
+      {onOpenMap && (
+        <button type="button" className="map-link-row" onClick={onOpenMap}>
+          <span className="map-link-label">🗺️ Interactive Map</span>
+          <span className="map-link-arrow">›</span>
+        </button>
+      )}
 
       <div className="stats-grid">
         <div className="stat-tile" style={{ background: '#dbeafe' }}>
