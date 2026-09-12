@@ -82,12 +82,41 @@ const PERSONA_FRAMING = {
     'Event Planner': 'Focus on rain probability, wind, and overall comfort for outdoor setup and guest comfort.'
 };
 
+// Voice + regional-language support: the frontend sends a 'language' code
+// ('en' or 'hi' for now - more can be added here and in the frontend's
+// language toggle without any other structural change). We don't run a
+// separate translation step - the model is simply told what to reply in,
+// since it understands the source question in either language already.
+const LANGUAGE_NAMES = {
+    hi: 'Hindi, written in Devanagari script'
+};
+
+function languageInstruction(language) {
+    const name = LANGUAGE_NAMES[language];
+    return name ? ` Respond in ${name}, regardless of what language the question was asked in.` : '';
+}
+
+// User-facing error messages, kept bilingual so a failure (e.g. Groq
+// rate-limited) doesn't suddenly drop a Hindi-speaking user back into
+// English at the exact moment something goes wrong.
+const ERROR_MESSAGES = {
+    en: {
+        overloaded: 'The AI is under heavy load right now. Please wait a few seconds and try again.',
+        generic: 'Sorry, I had trouble connecting to the AI right now.'
+    },
+    hi: {
+        overloaded: 'AI अभी बहुत व्यस्त है। कृपया कुछ सेकंड रुककर फिर से कोशिश करें।',
+        generic: 'माफ़ कीजिए, अभी AI से जुड़ने में समस्या हुई।'
+    }
+};
+
 router.post('/', async (req, res) => {
+    const { prompt, city: selectedCity, persona, language } = req.body;
     try {
-        const { prompt, city: selectedCity, persona } = req.body;
         const personaNote = persona && PERSONA_FRAMING[persona]
             ? ` The user's profile is "${persona}". ${PERSONA_FRAMING[persona]}`
             : '';
+        const langNote = languageInstruction(language);
 
         // If the frontend already knows which city is selected, use it directly
         // instead of burning a second LLM call re-extracting it - the extraction
@@ -99,7 +128,7 @@ router.post('/', async (req, res) => {
                 [
                     {
                         role: 'system',
-                        content: 'Extract the city name the user is asking about, if any is mentioned or clearly implied. Respond ONLY with JSON in this exact shape: {"city": "CityName"} or {"city": null} if no city is mentioned.'
+                        content: 'Extract the city name the user is asking about, if any is mentioned or clearly implied (the question may be in English, Hindi, or another Indian language). Respond ONLY with JSON in this exact shape: {"city": "CityName"} or {"city": null} if no city is mentioned.'
                     },
                     { role: 'user', content: prompt }
                 ],
@@ -117,12 +146,12 @@ router.post('/', async (req, res) => {
         if (city) {
             const weatherData = await getWeatherContext(city);
             messages = [
-                { role: 'system', content: `You are MAUSAM AI, a helpful weather assistant. Answer in a friendly, concise way (2-4 sentences), using the provided weather data.${personaNote}` },
+                { role: 'system', content: `You are MAUSAM AI, a helpful weather assistant. Answer in a friendly, concise way (2-4 sentences), using the provided weather data.${personaNote}${langNote}` },
                 { role: 'user', content: `Live weather data for ${city}: ${JSON.stringify(weatherData)}\n\nUser question: "${prompt}"` }
             ];
         } else {
             messages = [
-                { role: 'system', content: `You are MAUSAM AI, a helpful weather assistant. If the user has not mentioned a city, politely ask which city they mean.${personaNote}` },
+                { role: 'system', content: `You are MAUSAM AI, a helpful weather assistant. If the user has not mentioned a city, politely ask which city they mean.${personaNote}${langNote}` },
                 { role: 'user', content: prompt }
             ];
         }
@@ -133,10 +162,9 @@ router.post('/', async (req, res) => {
 
     } catch (error) {
         console.error('Assistant Error:', error);
+        const messages = ERROR_MESSAGES[language] || ERROR_MESSAGES.en;
         const isOverloaded = /429|503/.test(error.message || '');
-        const message = isOverloaded
-            ? "The AI is under heavy load right now. Please wait a few seconds and try again."
-            : "Sorry, I had trouble connecting to the AI right now.";
+        const message = isOverloaded ? messages.overloaded : messages.generic;
         res.status(500).json({ reply: message });
     }
 });

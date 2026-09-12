@@ -90,6 +90,40 @@
   margin-bottom: 6px;
 }
 
+.assistant-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* EN / हिंदी pill switcher - sets language for the AI reply, the mic, and
+   the voice reply together, so all three always agree. */
+.lang-toggle {
+  display: flex;
+  background: var(--tile-bg);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lang-btn.active {
+  background: var(--gradient-spotlight);
+  color: #ffffff;
+}
+
 .assistant-modal-header h3 {
   font-family: var(--font-heading);
   font-size: 17px;
@@ -160,6 +194,72 @@
   display: flex;
   gap: 10px;
   margin-bottom: 6px;
+}
+
+/* Round mic button that sits to the left of the text input. Only rendered
+   at all when the browser supports SpeechRecognition (see Assistant.jsx),
+   so there's no dead/disabled button confusing anyone on an unsupported
+   browser - the whole feature just quietly isn't there. */
+.mic-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-subtle);
+  background: #ffffff;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.mic-btn:hover {
+  border-color: var(--cyan);
+}
+
+.mic-btn.listening {
+  background: #fef2f2;
+  border-color: #f87171;
+  animation: mic-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(248, 113, 113, 0); }
+}
+
+/* Row under the form: an unsupported-browser note on the left (only shows
+   up when there's no mic button to show instead) and the voice-reply
+   on/off toggle on the right. */
+.assistant-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.mic-unsupported-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  margin-right: auto;
+}
+
+.speak-toggle {
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.speak-toggle:hover {
+  color: var(--cyan-dark);
 }
 
 .assistant-input {

@@ -32,13 +32,18 @@
   --violet: #818cf8;
   --pink: #f472b6;
 
-  --gradient-brand: linear-gradient(135deg, #06b6d4 0%, #2dd4bf 45%, #3b82f6 100%);
+   --gradient-brand: linear-gradient(135deg, #06b6d4 0%, #2dd4bf 45%, #3b82f6 100%);
   --gradient-spotlight: linear-gradient(135deg, #0ea5e9 0%, #22d3ee 45%, #818cf8 100%);
   --gradient-hero: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 45%, #dbeafe 100%);
+
+  /* Used by WeatherCard and MapView; matches the radius already used on
+     RecommendationCard so the app's "big" cards are visually consistent. */
+  --radius-lg: 20px;
 
   --font-heading: 'Sora', 'Poppins', sans-serif;
   --font-body: 'Plus Jakarta Sans', 'Poppins', sans-serif;
 }
+
 
 html, body {
   max-width: 100%;
