@@ -163,10 +163,13 @@ function App() {
             )}
 
             <div className="dashboard-grid">
-              {/* Left column: Weather + Forecast (map now opens from a
-                  button inside the card instead of always rendering here) */}
+              {/* Left column: Weather + Forecast + persona insights - moving
+                  the insights panel here (instead of full-width below the
+                  grid) fills the gap left by this column being shorter than
+                  the sidebar, so both columns end at roughly the same height. */}
               <div className="column primary">
                 <WeatherCard weather={weather} onOpenMap={() => setMapOpen(true)} />
+                <PersonaPanel persona={persona} insights={insights} city={city} />
               </div>
 
               {/* Right column: Air Quality + Alerts + Saved Locations */}
@@ -181,9 +184,6 @@ function App() {
                 <DailyForecastCard daily={weather?.daily} />
               </div>
             </div>
-
-            {/* Persona-specific panel (Wellness/Fitness/Surfer/Traveler/etc.) */}
-            <PersonaPanel persona={persona} insights={insights} city={city} />
 
             {/* Interactive Map - only mounted while open, so it isn't
                 fetching/rendering tiles in the background the rest of the
