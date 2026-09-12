@@ -181,13 +181,12 @@ function App() {
             )}
 
             <div className="dashboard-grid">
-              {/* Left column: Weather + Forecast + persona insights - moving
-                  the insights panel here (instead of full-width below the
-                  grid) fills the gap left by this column being shorter than
-                  the sidebar, so both columns end at roughly the same height. */}
+              {/* Left column: Weather + Forecast + 3-day outlook - this
+                  fills the space that used to sit blank under the weather
+                  card, keeping this column close in height to the sidebar. */}
               <div className="column primary">
                 <WeatherCard weather={weather} onOpenMap={() => setMapOpen(true)} />
-                <PersonaPanel persona={persona} insights={insights} city={city} />
+                <DailyForecastCard daily={weather?.daily} />
               </div>
 
               {/* Right column: Air Quality + Alerts + Saved Locations */}
@@ -197,11 +196,13 @@ function App() {
                 )}
                 <AlertList alerts={alerts} />
                 <SavedLocationsCard city={city} onSelectCity={setCity} />
-                {/* Fills the leftover space below the sidebar cards - data
-                    the backend was already sending but nothing displayed. */}
-                <DailyForecastCard daily={weather?.daily} />
               </div>
             </div>
+
+            {/* Persona-specific panel (Wellness/Fitness/Surfer/Traveler/etc.) -
+                back to full-width below the grid, now that the 3-day
+                forecast fills the left column's blank space instead. */}
+            <PersonaPanel persona={persona} insights={insights} city={city} />
 
             {/* Interactive Map - only mounted while open, so it isn't
                 fetching/rendering tiles in the background the rest of the

@@ -1,5 +1,6 @@
 /* frontend/src/components/PersonaPanel.css */
 .persona-panel {
+  margin-top: 20px;
   padding: 20px;
   background: var(--card-bg);
   backdrop-filter: blur(12px);
