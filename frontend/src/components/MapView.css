@@ -39,6 +39,43 @@
   cursor: pointer;
 }
 
+/* ---------------------------------------------------------------- */
+/* Layer switcher - pill buttons, one active at a time. Tapping the  */
+/* active pill again turns the overlay off entirely.                 */
+/* ---------------------------------------------------------------- */
+.map-layer-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.map-layer-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(122, 166, 186, 0.28);
+  background: #f4f9fb;
+  color: #5c7c8f;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.map-layer-tab:hover {
+  background: #e6f2f7;
+}
+
+.map-layer-tab.active {
+  background: var(--gradient-spotlight);
+  border-color: transparent;
+  color: #ffffff;
+}
+
 .map-container {
   height: 380px;
   border: 1px solid rgba(122, 166, 186, 0.2);

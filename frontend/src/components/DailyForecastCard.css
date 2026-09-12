@@ -1,0 +1,79 @@
+/* frontend/src/components/DailyForecastCard.css */
+.daily-forecast-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow);
+}
+
+.daily-forecast-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.daily-forecast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.daily-forecast-row {
+  display: grid;
+  grid-template-columns: 48px 34px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.daily-forecast-row:first-child {
+  border-top: none;
+}
+
+.daily-forecast-day {
+  font-weight: 700;
+}
+
+.daily-forecast-icon {
+  display: flex;
+  align-items: center;
+}
+
+.daily-forecast-condition {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.daily-forecast-rain {
+  font-size: 0.78rem;
+  color: #0ea5e9;
+  white-space: nowrap;
+}
+
+.daily-forecast-temps {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.daily-forecast-min {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 480px) {
+  .daily-forecast-row {
+    grid-template-columns: 40px 30px 1fr auto;
+  }
+  .daily-forecast-rain {
+    display: none;
+  }
+}

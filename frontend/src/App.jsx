@@ -6,6 +6,7 @@ import RecommendationCard from './components/RecommendationCard';
 import AlertList from './components/AlertList';
 import AirQualityCard from './components/AirQualityCard';
 import SavedLocationsCard from './components/SavedLocationsCard';
+import DailyForecastCard from './components/DailyForecastCard';
 import MapView from './components/MapView';
 import LoadingScreen from './components/LoadingScreen';
 import Assistant from './components/Assistant';
@@ -175,6 +176,9 @@ function App() {
                 )}
                 <AlertList alerts={alerts} />
                 <SavedLocationsCard city={city} onSelectCity={setCity} />
+                {/* Fills the leftover space below the sidebar cards - data
+                    the backend was already sending but nothing displayed. */}
+                <DailyForecastCard daily={weather?.daily} />
               </div>
             </div>
 

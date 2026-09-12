@@ -109,7 +109,19 @@ router.get('/', async (req, res) => {
           const weatherData = await getWeatherForCity(`${point.lat},${point.lng}`);
           if (!isRepresentative(point, weatherData)) return null; // likely open water - no real reading here
           const { score } = scoreHour(weatherData, persona);
-          return { lat: point.lat, lng: point.lng, score, category: categorize(score) };
+          return {
+            lat: point.lat,
+            lng: point.lng,
+            score,
+            category: categorize(score),
+            // These ride along on the same fetch used for the score above -
+            // no extra API calls - so the map can offer wind/AQI/humidity
+            // overlays "for free" instead of just the persona score.
+            wind: weatherData.wind,
+            humidity: weatherData.humidity,
+            aqi: weatherData.airQuality?.index ?? null,
+            aqiCategory: weatherData.airQuality?.category ?? null
+          };
         } catch (pointErr) {
           // One grid point failing (rate limit, transient error) shouldn't
           // take down the whole overlay - just omit that point.
