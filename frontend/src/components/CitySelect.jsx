@@ -8,18 +8,19 @@ const QUICK_CITIES = ['New Delhi', 'Mumbai', 'Bareilly', 'Bengaluru', 'Kolkata',
 
 function CitySelect({ onContinue }) {
   const [cityInput, setCityInput] = useState('');
+  const [phone, setPhone] = useState('');           // NEW
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (cityInput.trim()) {
-      onContinue(cityInput.trim());
+      onContinue(cityInput.trim(), phone.trim());    // CHANGED — now passes phone too
     }
   };
 
   const handleQuickPick = (city) => {
-    onContinue(city);
+    onContinue(city, phone.trim());                  // CHANGED
   };
 
   const handleUseLocation = () => {
@@ -35,7 +36,6 @@ function CitySelect({ onContinue }) {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          // Free, no-API-key reverse geocoding service - converts lat/lon into a city name.
           const res = await fetch(
             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
           );
@@ -43,7 +43,7 @@ function CitySelect({ onContinue }) {
           const detectedCity = data.city || data.locality || data.principalSubdivision;
 
           if (detectedCity) {
-            onContinue(detectedCity);
+            onContinue(detectedCity, phone.trim());   // CHANGED
           } else {
             setGeoError("Couldn't figure out your city from your location. Please type it manually.");
           }
@@ -54,7 +54,6 @@ function CitySelect({ onContinue }) {
         }
       },
       () => {
-        // User denied permission, or the browser couldn't get a location
         setGeoError('Location permission denied. Please type your city manually.');
         setGeoLoading(false);
       }
@@ -82,6 +81,18 @@ function CitySelect({ onContinue }) {
               autoFocus
             />
           </div>
+
+          {/* NEW — optional SMS opt-in, same form, no extra page */}
+          <div className="city-select-input-wrap">
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="📲 Phone for SMS alerts (optional)"
+              className="city-select-input"
+            />
+          </div>
+
           <button type="submit" className="btn btn-primary city-select-submit" disabled={!cityInput.trim()}>
             Continue
           </button>

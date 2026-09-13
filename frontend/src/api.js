@@ -10,7 +10,11 @@ const api = axios.create({
   }
 });
 
+
+
 export const weatherApi = {
+  subscribeToAlerts: (data) => api.post('/api/subscribers', data), // { name, phone, city, persona }
+sendDemoAlert: (data) => api.post('/api/subscribers/demo-alert', data), // { phone, city, persona }
   subscribeToAlerts: (data) => api.post('/api/subscribers', data), // { name, phone, city, persona }
   getWeather: (city) => api.get(`/api/weather?city=${encodeURIComponent(city)}`),
   getRecommendation: (data) => api.post('/api/recommend', data), // { city, persona }
@@ -21,6 +25,7 @@ export const weatherApi = {
   askAssistant: (data) => api.post('/api/assistant', data),
   getZone: (lat, lng, persona) =>
     api.get(`/api/zone?lat=${lat}&lng=${lng}&persona=${encodeURIComponent(persona)}`)
+  
 };
 
 export default api;

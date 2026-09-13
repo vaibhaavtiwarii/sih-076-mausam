@@ -13,6 +13,7 @@ import Assistant from './components/Assistant';
 import ActivitySelector from './components/ActivitySelector';
 import PersonaPanel from './components/PersonaPanel';
 import CitySelect from './components/CitySelect';
+import DemoAlertButton from './components/DemoAlertButton'; // NEW
 import './App.css';
 
 function App() {
@@ -35,9 +36,6 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch weather, recommendation, alerts, and persona insights in parallel.
-      // The backend caches/de-dupes the underlying weather lookup, so this
-      // doesn't multiply external API calls.
       const [weatherRes, recRes, alertRes, personaRes] = await Promise.all([
         weatherApi.getWeather(cityName),
         weatherApi.getRecommendation({ city: cityName, persona: pers }),
@@ -51,10 +49,6 @@ function App() {
       setInsights(personaRes.data.insights);
       setLastUpdated(new Date().toLocaleTimeString());
 
-      // Surface alerts as a popup the moment they load, instead of making
-      // the user notice the Smart Alerts card tucked in the sidebar. The
-      // card itself still renders as always - this is just an extra,
-      // dismissible heads-up on top of it.
       if (alertRes.data.alerts && alertRes.data.alerts.length > 0) {
         setAlertPopupOpen(true);
       }
@@ -66,14 +60,12 @@ function App() {
     }
   };
 
-  // Fetch whenever we're on the dashboard and city/persona changes
   useEffect(() => {
     if (stage === 'dashboard' && city) {
       fetchAllData(city, persona);
     }
   }, [stage, city, persona]);
 
-  // Escape closes the map modal, same as the assistant popup
   useEffect(() => {
     if (!mapOpen) return;
     const onKey = (e) => { if (e.key === 'Escape') setMapOpen(false); };
@@ -81,7 +73,6 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [mapOpen]);
 
-  // Same Escape-to-close behavior for the alert popup
   useEffect(() => {
     if (!alertPopupOpen) return;
     const onKey = (e) => { if (e.key === 'Escape') setAlertPopupOpen(false); };
@@ -89,14 +80,22 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [alertPopupOpen]);
 
-  // Called from the landing screen once a city has been chosen
-  const handleLocationConfirmed = (selectedCity) => {
+  // Called from the landing screen once a city has been chosen.
+  // `phone` is optional — only present if the user filled in the SMS field.
+  const handleLocationConfirmed = (selectedCity, phone) => {
     setCity(selectedCity);
     setInputCity(selectedCity);
     setStage('dashboard');
+
+    // Fire-and-forget SMS signup — never blocks navigation to the dashboard,
+    // even if this is slow or fails.
+    if (phone) {
+      weatherApi
+        .subscribeToAlerts({ phone, city: selectedCity, persona: 'Fitness' })
+        .catch((err) => console.error('SMS subscribe failed:', err));
+    }
   };
 
-  // Lets the user go back and pick a different city
   const handleChangeLocation = () => {
     setWeather(null);
     setRecommendation(null);
@@ -117,12 +116,10 @@ function App() {
     setPersona(newPersona);
   };
 
-  // Screen 1: ask the user for their location before showing anything else
   if (stage === 'landing') {
     return <CitySelect onContinue={handleLocationConfirmed} />;
   }
 
-  // Screen 2: the full dashboard
   return (
     <div className="app">
       <header className="app-header">
@@ -158,7 +155,6 @@ function App() {
       </header>
 
       <main className="app-main">
-        {/* "What describes you?" persona selector */}
         <ActivitySelector
           persona={persona}
           onPersonaChange={handlePersonaChange}
@@ -170,10 +166,6 @@ function App() {
 
         {!loading && weather && (
           <>
-            {/* The personalization "scale" - score, best time, and the
-                why-this-window reasons - promoted to the top, full width,
-                so it's the first thing visible without scrolling past
-                the weather card and map first. */}
             {recommendation && (
               <div className="spotlight-section">
                 <RecommendationCard recommendation={recommendation} />
@@ -181,33 +173,23 @@ function App() {
             )}
 
             <div className="dashboard-grid">
-              {/* Left column: Weather + Forecast + 3-day outlook - this
-                  fills the space that used to sit blank under the weather
-                  card, keeping this column close in height to the sidebar. */}
               <div className="column primary">
                 <WeatherCard weather={weather} onOpenMap={() => setMapOpen(true)} />
                 <DailyForecastCard daily={weather?.daily} />
               </div>
 
-              {/* Right column: Air Quality + Alerts + Saved Locations */}
               <div className="column secondary">
                 {weather?.airQuality && (
                   <AirQualityCard airQuality={weather.airQuality} />
                 )}
                 <AlertList alerts={alerts} />
                 <SavedLocationsCard city={city} onSelectCity={setCity} />
+                <DemoAlertButton city={city} persona={persona} /> {/* NEW */}
               </div>
             </div>
 
-            {/* Persona-specific panel (Wellness/Fitness/Surfer/Traveler/etc.) -
-                back to full-width below the grid, now that the 3-day
-                forecast fills the left column's blank space instead. */}
             <PersonaPanel persona={persona} insights={insights} city={city} />
 
-            {/* Interactive Map - only mounted while open, so it isn't
-                fetching/rendering tiles in the background the rest of the
-                time. Closing via the backdrop, the ✕, or Escape all just
-                flip mapOpen back to false. */}
             {mapOpen && (
               <div className="map-modal-overlay" onClick={() => setMapOpen(false)}>
                 <div className="map-modal" onClick={(e) => e.stopPropagation()}>
@@ -232,10 +214,6 @@ function App() {
               </div>
             )}
 
-            {/* Alert popup - fires once when alerts load for this
-                city/persona. Dismissing it just closes the popup; the
-                Smart Alerts card in the sidebar keeps showing the same
-                alerts as always, popup or not. */}
             {alertPopupOpen && alerts.length > 0 && (
               <div className="alert-popup-overlay" onClick={() => setAlertPopupOpen(false)}>
                 <div className="alert-popup" onClick={(e) => e.stopPropagation()}>

@@ -1,54 +1,35 @@
 // backend/routes/subscriberRoutes.js
 const express = require('express');
 const Subscriber = require('../models/Subscriber');
+const { getWeatherForCity } = require('../services/weatherService');   // NEW
+const { generateAlerts } = require('../services/alertService');         // NEW
+const { sendSMS } = require('../services/smsService');                  // NEW
 
 const router = express.Router();
 
-// POST /api/subscribers -> register/update a phone number for SMS alerts
-router.post('/', async (req, res) => {
+// ... keep your existing POST '/' and DELETE '/:phone' routes exactly as they are ...
+
+// POST /api/subscribers/demo-alert -> sends ONE real, weather-based alert
+// SMS to a single phone number, right now. Safe for a live judge demo:
+// it doesn't touch the subscriber list or send to anyone else.
+router.post('/demo-alert', async (req, res) => {
   try {
-    const { name, phone, city, persona, language } = req.body;
-    if (!phone || !city) {
-      return res.status(400).json({ error: 'phone and city are required.' });
+    const { phone, city, persona } = req.body;
+    if (!phone || !city || !persona) {
+      return res.status(400).json({ error: 'phone, city and persona are required.' });
     }
 
-    const subscriber = await Subscriber.findOneAndUpdate(
-      { phone: phone.trim() },
-      { name, phone: phone.trim(), city, persona, language, active: true },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const weatherData = await getWeatherForCity(city);
+    const alerts = generateAlerts(weatherData, persona); // unfiltered — always returns at least one
+    const top = alerts[0];
 
-    res.status(201).json({ message: 'Subscribed successfully', subscriber });
+    const message = `MAUSAM AI Alert (${city}): ${top.title.replace(/[^\w\s]/gi, '').trim()} - ${top.message}`;
+    await sendSMS(phone, message);
+
+    res.json({ message: 'Demo alert sent!', alert: top });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
-
-// DELETE /api/subscribers/:phone -> unsubscribe
-router.delete('/:phone', async (req, res) => {
-  try {
-    const subscriber = await Subscriber.findOneAndUpdate(
-      { phone: req.params.phone },
-      { active: false },
-      { new: true }
-    );
-    if (!subscriber) return res.status(404).json({ error: 'Subscriber not found.' });
-    res.json({ message: 'Unsubscribed successfully' });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// // TEMPORARY: manually trigger the alert check for testing
-// const { checkAndNotify } = require('../services/alertScheduler');
-// router.post('/test-alert-check', async (req, res) => {
-//   try {
-//     await checkAndNotify();
-//     res.json({ message: 'Alert check triggered — check your phone and terminal.' });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// });
-
 
 module.exports = router;
