@@ -13,11 +13,10 @@ import Assistant from './components/Assistant';
 import ActivitySelector from './components/ActivitySelector';
 import PersonaPanel from './components/PersonaPanel';
 import CitySelect from './components/CitySelect';
-import DemoAlertButton from './components/DemoAlertButton'; // NEW
+import DemoAlertButton from './components/DemoAlertButton';
 import './App.css';
 
 function App() {
-  // 'landing' = the city-select screen, 'dashboard' = the main weather app
   const [stage, setStage] = useState('landing');
   const [city, setCity] = useState('');
   const [inputCity, setInputCity] = useState('');
@@ -31,6 +30,7 @@ function App() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [alertPopupOpen, setAlertPopupOpen] = useState(false);
+  const [subscribedPhone, setSubscribedPhone] = useState(''); // NEW
 
   const fetchAllData = async (cityName, pers) => {
     setLoading(true);
@@ -86,9 +86,8 @@ function App() {
     setCity(selectedCity);
     setInputCity(selectedCity);
     setStage('dashboard');
+    setSubscribedPhone(phone || ''); // NEW — carry it to the dashboard
 
-    // Fire-and-forget SMS signup — never blocks navigation to the dashboard,
-    // even if this is slow or fails.
     if (phone) {
       weatherApi
         .subscribeToAlerts({ phone, city: selectedCity, persona: 'Fitness' })
@@ -184,7 +183,7 @@ function App() {
                 )}
                 <AlertList alerts={alerts} />
                 <SavedLocationsCard city={city} onSelectCity={setCity} />
-                <DemoAlertButton city={city} persona={persona} /> {/* NEW */}
+                <DemoAlertButton city={city} persona={persona} initialPhone={subscribedPhone} /> {/* CHANGED */}
               </div>
             </div>
 

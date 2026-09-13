@@ -1,12 +1,17 @@
 // frontend/src/components/DemoAlertButton.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { weatherApi } from '../api';
 import './DemoAlertButton.css';
 
-function DemoAlertButton({ city, persona }) {
-  const [phone, setPhone] = useState('');
+function DemoAlertButton({ city, persona, initialPhone = '' }) {
+  const [phone, setPhone] = useState(initialPhone);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Keep the field in sync if the landing-page phone arrives or changes
+  useEffect(() => {
+    if (initialPhone) setPhone(initialPhone);
+  }, [initialPhone]);
 
   const isValidPhone = (p) => /^\+?\d{10,13}$/.test(p.replace(/\s/g, ''));
 
