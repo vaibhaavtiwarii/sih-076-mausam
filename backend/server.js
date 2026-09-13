@@ -2,6 +2,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('./config/db');               
+const { startAlertScheduler } = require('./services/alertScheduler'); 
 
 const weatherRoutes = require('./routes/weatherRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
@@ -9,6 +11,7 @@ const alertRoutes = require('./routes/alertRoutes');
 const assistantRoutes = require('./routes/assistantRoutes');
 const personaRoutes = require('./routes/personaRoutes');
 const zoneRoutes = require('./routes/zoneRoutes');
+const subscriberRoutes = require('./routes/subscriberRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -33,6 +36,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/persona', personaRoutes);
 app.use('/api/zone', zoneRoutes);
+app.use('/api/subscribers', subscriberRoutes);    
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -47,6 +51,10 @@ app.use((err, req, res, next) => {
 
   res.status(500).json({ error: 'Something went wrong on the server.' });
 });
+
+connectDB().then(() => {           // NEW
+  startAlertScheduler();           // NEW
+});   
 
 app.listen(PORT, () => {
   console.log(`✅ MAUSAM AI Backend running on http://localhost:${PORT}`);
