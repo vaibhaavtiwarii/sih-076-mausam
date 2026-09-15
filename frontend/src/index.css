@@ -14,34 +14,21 @@ html, body, #root {
 
 body {
   font-family: 'Plus Jakarta Sans', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #eef6fb;
   color: #10263a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-}
 
-/* Soft, airy glow orbs - a light-theme "sky" backdrop instead of the old
-   dark aurora, tuned to sit behind the cards without fighting them. */
-body::before {
-  content: '';
-  position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background:
-    radial-gradient(ellipse at 15% 20%, rgba(56, 189, 248, 0.16) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 15%, rgba(129, 140, 248, 0.10) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 85%, rgba(45, 212, 191, 0.12) 0%, transparent 55%);
-  z-index: -1;
-  animation: aurora 22s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes aurora {
-  0% { transform: translate(0, 0) scale(1); opacity: 0.75; }
-  100% { transform: translate(4%, 4%) scale(1.08); opacity: 1; }
+  /* Hero photo background - a light wash sits on top of the photo (not
+     instead of it) so text stays legible, but kept subtle enough that
+     the photo itself is clearly visible, not washed out. */
+  background-image:
+    linear-gradient(180deg, rgba(224, 242, 254, 0.22) 0%, rgba(238, 246, 251, 0.32) 45%, rgba(238, 246, 251, 0.45) 100%),
+    url('/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 a {
@@ -69,4 +56,12 @@ button {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--cyan-dark, #0891b2);
+}
+
+/* background-attachment: fixed is unreliable/jittery on mobile Safari -
+   fall back to a normal scrolling background below the tablet breakpoint. */
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll;
+  }
 }

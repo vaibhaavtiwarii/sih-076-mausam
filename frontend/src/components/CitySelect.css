@@ -7,9 +7,10 @@
   justify-content: center;
   gap: 18px;
   padding: 22px;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(14, 165, 217, 0.08), transparent 26%),
-    linear-gradient(180deg, #edf8fd 0%, #f4f9fc 55%, #f8fbfd 100%);
+  /* Transparent so the hero photo set on <body> (index.css) shows
+     through here too - this screen used to have its own opaque
+     background that hid it entirely. */
+  background: transparent;
 }
 
 .city-select-card {
