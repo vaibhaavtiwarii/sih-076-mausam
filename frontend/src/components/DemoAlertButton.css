@@ -6,6 +6,13 @@
   padding: 20px;
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow);
+  /* This is the last card in the sidebar column, which now stretches to
+     match the weather/forecast column's height (see .column.secondary
+     in App.css) - center the content within whatever extra height it
+     picks up instead of leaving it pinned to the top with a gap below. */
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .demo-alert-card h3 {

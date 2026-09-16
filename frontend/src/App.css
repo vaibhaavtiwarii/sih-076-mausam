@@ -235,7 +235,7 @@ h1, h2, h3, h4 {
   grid-template-columns: 1.5fr 1fr;
   gap: 16px;
   margin-bottom: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .column {
@@ -247,9 +247,17 @@ h1, h2, h3, h4 {
 
 /* The sidebar no longer double-boxes its children - each card (rec,
    air quality, alerts, saved locations) now renders its own distinct
-   surface via --card-bg, so this just supplies the spacing. */
+   surface via --card-bg, so this just supplies the spacing. Its last
+   card (SMS Alert Demo) grows to soak up any leftover height so the
+   column's bottom edge lines up with the primary column instead of
+   leaving a gap of bare background showing through. */
 .column.secondary {
   min-width: 0;
+}
+
+.column.secondary > *:last-child {
+  flex: 1;
+  display: flex;
 }
 
 /* The Big Weather Card */
