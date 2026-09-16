@@ -14,6 +14,7 @@ import ActivitySelector from './components/ActivitySelector';
 import PersonaPanel from './components/PersonaPanel';
 import CitySelect from './components/CitySelect';
 import DemoAlertButton from './components/DemoAlertButton';
+import MobileTabs from './components/MobileTabs';
 import './App.css';
 
 function App() {
@@ -31,6 +32,20 @@ function App() {
   const [mapOpen, setMapOpen] = useState(false);
   const [alertPopupOpen, setAlertPopupOpen] = useState(false);
   const [subscribedPhone, setSubscribedPhone] = useState(''); // NEW
+
+  // Drives the desktop-dashboard vs. mobile-tabbed-app branch below.
+  // Same data, same components where possible - just a different
+  // arrangement so phone users aren't scrolling through everything
+  // stacked in one column.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  );
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const fetchAllData = async (cityName, pers) => {
     setLoading(true);
@@ -171,23 +186,40 @@ function App() {
               </div>
             )}
 
-            <div className="dashboard-grid">
-              <div className="column primary">
-                <WeatherCard weather={weather} onOpenMap={() => setMapOpen(true)} />
-                <DailyForecastCard daily={weather?.daily} />
-              </div>
+            {!isMobile && (
+              <>
+                <div className="dashboard-grid">
+                  <div className="column primary">
+                    <WeatherCard weather={weather} onOpenMap={() => setMapOpen(true)} />
+                    <DailyForecastCard daily={weather?.daily} />
+                  </div>
 
-              <div className="column secondary">
-                {weather?.airQuality && (
-                  <AirQualityCard airQuality={weather.airQuality} />
-                )}
-                <AlertList alerts={alerts} />
-                <SavedLocationsCard city={city} onSelectCity={setCity} />
-                <DemoAlertButton city={city} persona={persona} initialPhone={subscribedPhone} /> {/* CHANGED */}
-              </div>
-            </div>
+                  <div className="column secondary">
+                    {weather?.airQuality && (
+                      <AirQualityCard airQuality={weather.airQuality} />
+                    )}
+                    <AlertList alerts={alerts} />
+                    <SavedLocationsCard city={city} onSelectCity={setCity} />
+                    <DemoAlertButton city={city} persona={persona} initialPhone={subscribedPhone} />
+                  </div>
+                </div>
 
-            <PersonaPanel persona={persona} insights={insights} city={city} />
+                <PersonaPanel persona={persona} insights={insights} city={city} />
+              </>
+            )}
+
+            {isMobile && (
+              <MobileTabs
+                weather={weather}
+                alerts={alerts}
+                insights={insights}
+                persona={persona}
+                city={city}
+                subscribedPhone={subscribedPhone}
+                onSelectCity={setCity}
+                onOpenMap={() => setMapOpen(true)}
+              />
+            )}
 
             {mapOpen && (
               <div className="map-modal-overlay" onClick={() => setMapOpen(false)}>
@@ -259,10 +291,12 @@ function App() {
         )}
       </main>
 
-      <footer className="app-footer">
-        <p>MAUSAM AI · Personalized Weather Intelligence · SIH 2026</p>
-        <p className="footer-sub">Ministry of Earth Sciences · India Meteorological Department</p>
-      </footer>
+      {!isMobile && (
+        <footer className="app-footer">
+          <p>MAUSAM AI · Personalized Weather Intelligence · SIH 2026</p>
+          <p className="footer-sub">Ministry of Earth Sciences · India Meteorological Department</p>
+        </footer>
+      )}
     </div>
   );
 }

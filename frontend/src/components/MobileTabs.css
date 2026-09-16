@@ -1,0 +1,71 @@
+/* frontend/src/components/MobileTabs.css */
+
+.mobile-tabs {
+  /* Leaves room at the bottom so the last card in a tab isn't hidden
+     behind the fixed tab bar. */
+  padding-bottom: 84px;
+}
+
+.mobile-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Fixed bottom bar - this is what makes it read as "an app screen" 
+   rather than "a webpage that happens to be narrow". */
+.mobile-tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 500;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-subtle);
+  box-shadow: 0 -8px 24px rgba(14, 116, 144, 0.10);
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.mobile-tab-btn.active {
+  color: var(--cyan-dark);
+  background: var(--tile-bg-strong);
+}
+
+.mobile-tab-icon {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.mobile-tab-label {
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* Only ever shown on phone-width screens, but scope it defensively in
+   case this file is ever loaded without the JS-side width check. */
+@media (min-width: 769px) {
+  .mobile-tabs,
+  .mobile-tab-bar {
+    display: none;
+  }
+}
