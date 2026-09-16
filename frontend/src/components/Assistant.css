@@ -56,7 +56,7 @@
   align-items: flex-start;
   justify-content: flex-end;
   padding: 84px 24px 24px;
-  z-index: 1000;
+  z-index: 1200;
   animation: assistant-fade-in 0.15s ease;
 }
 

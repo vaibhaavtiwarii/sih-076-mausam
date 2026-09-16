@@ -1,5 +1,6 @@
 // frontend/src/components/Assistant.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { weatherApi } from '../api';
 import './Assistant.css';
 
@@ -184,7 +185,12 @@ function Assistant({ city, persona }) {
         <span className="assistant-icon-spark">✨</span>
       </button>
 
-      {chatOpen && (
+      {/* Rendered via a portal straight into <body> instead of staying
+          nested inside <header> - the header uses backdrop-filter for its
+          frosted-glass look, which creates its own CSS stacking context and
+          would otherwise trap this popup behind later page sections
+          (persona selector, etc.) no matter what z-index it's given. */}
+      {chatOpen && createPortal(
         <div className="assistant-overlay" onClick={() => setChatOpen(false)}>
           <div className="assistant-modal" onClick={(e) => e.stopPropagation()}>
             <div className="assistant-modal-header">
@@ -268,7 +274,8 @@ function Assistant({ city, persona }) {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
