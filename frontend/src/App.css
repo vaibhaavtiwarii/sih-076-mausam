@@ -180,6 +180,9 @@ h1, h2, h3, h4 {
 }
 
 .change-location-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #ffffff;
   border: 1.5px solid var(--border-subtle);
   border-radius: 40px;
@@ -402,6 +405,75 @@ h1, h2, h3, h4 {
   }
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Compact mobile header - city input, Go, the AI icon, and the      */
+/* location pin all sit in one tight row. The tagline is dropped and */
+/* the timestamp shrinks to a low-priority caption that wraps onto   */
+/* its own line rather than forcing everything else to shrink for it.*/
+/* ---------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .app-header {
+    padding: 10px 14px;
+  }
+
+  .brand h1 {
+    font-size: 19px;
+  }
+
+  .brand .tagline {
+    display: none;
+  }
+
+  .header-controls {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .city-form {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .city-input {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+    padding: 9px 12px;
+  }
+
+  .btn-primary {
+    padding: 9px 14px;
+  }
+
+  /* Location pin collapses to an icon-only circle, matching the AI
+     button's size, instead of a wide pill with text. */
+  .change-location-btn {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+  }
+
+  .change-location-text {
+    display: none;
+  }
+
+  .change-location-icon {
+    font-size: 16px;
+  }
+
+  /* Lowest priority item - if the row above is full, this simply wraps
+     onto its own line instead of squeezing the buttons. */
+  .last-updated {
+    flex: 1 1 100%;
+    font-size: 10px;
+    text-align: right;
   }
 }
 

@@ -153,17 +153,20 @@ function App() {
               />
               <button type="submit" className="btn btn-primary">Go</button>
             </form>
-            {lastUpdated && (
-              <span className="last-updated">Updated: {lastUpdated}</span>
-            )}
             <Assistant city={city} persona={persona} />
             <button
               type="button"
               className="change-location-btn"
               onClick={handleChangeLocation}
+              aria-label="Change location"
+              title="Change location"
             >
-              📍 Change location
+              <span className="change-location-icon">📍</span>
+              <span className="change-location-text">Change location</span>
             </button>
+            {lastUpdated && (
+              <span className="last-updated">Updated: {lastUpdated}</span>
+            )}
           </div>
         </div>
       </header>
